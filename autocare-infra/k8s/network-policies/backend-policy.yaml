@@ -1,0 +1,35 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: backend-policy
+  namespace: autocare
+spec:
+  podSelector:
+    matchExpressions:
+      - key: app
+        operator: In
+        values:
+          - user-auth-service
+          - vehicle-maintenance-service
+  policyTypes:
+    - Egress
+  egress:
+    # Allow egress to RDS on port 3306 (private subnet CIDRs)
+    - to:
+        - ipBlock:
+            cidr: 10.0.3.0/24
+        - ipBlock:
+            cidr: 10.0.4.0/24
+      ports:
+        - protocol: TCP
+          port: 3306
+    # Allow egress to AWS Secrets Manager (HTTPS) for External Secrets Operator
+    - ports:
+        - protocol: TCP
+          port: 443
+    # Allow DNS resolution
+    - ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53

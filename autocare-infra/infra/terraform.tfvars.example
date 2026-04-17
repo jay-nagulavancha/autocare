@@ -1,0 +1,17 @@
+# Copy this file to terraform.tfvars and fill in real values.
+# NEVER commit terraform.tfvars — it contains secrets.
+
+aws_region   = "us-west-2"
+environment  = "dev"
+cluster_name = "autocare-eks"
+domain_name  = "autocare.yourdomain.com"
+github_org   = "jay-nagulavancha"
+github_repo  = "autocare"
+
+# Sensitive — generate strong random values
+db_password = "CHANGE_ME"
+jwt_secret  = "CHANGE_ME_base64_encoded_256bit_key"
+
+# Cost optimisation — set true for dev/staging
+enable_auto_shutdown       = true
+auto_shutdown_idle_minutes = 30

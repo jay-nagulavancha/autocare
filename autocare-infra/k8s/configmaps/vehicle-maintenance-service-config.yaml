@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: vehicle-maintenance-service-config
+  namespace: autocare
+data:
+  DB_PORT: "3306"
+  DB_NAME: maintenance_db
+  DB_USERNAME: root

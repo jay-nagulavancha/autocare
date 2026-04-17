@@ -1,0 +1,61 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vehicle-maintenance-ui
+  namespace: autocare
+  labels:
+    app: vehicle-maintenance-ui
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: vehicle-maintenance-ui
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
+  template:
+    metadata:
+      labels:
+        app: vehicle-maintenance-ui
+    spec:
+      serviceAccountName: autocare-sa
+      containers:
+        - name: vehicle-maintenance-ui
+          image: <ECR_URL>/autocare/vehicle-maintenance-ui:<TAG>
+          ports:
+            - containerPort: 3000
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 200m
+              memory: 256Mi
+          env:
+            # Build-time API URLs injected from ConfigMap at runtime (for reference)
+            - name: VITE_AUTH_API_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: vehicle-maintenance-ui-config
+                  key: VITE_AUTH_API_URL
+            - name: VITE_MAINTENANCE_API_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: vehicle-maintenance-ui-config
+                  key: VITE_MAINTENANCE_API_URL
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 3000
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 3000
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            failureThreshold: 3

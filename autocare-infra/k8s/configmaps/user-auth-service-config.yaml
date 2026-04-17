@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: user-auth-service-config
+  namespace: autocare
+data:
+  DB_PORT: "3306"
+  DB_NAME: auth_db
+  DB_USERNAME: root
+  JWT_EXPIRATION_MS: "86400000"

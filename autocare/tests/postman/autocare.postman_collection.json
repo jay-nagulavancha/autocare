@@ -1,0 +1,1179 @@
+{
+  "info": {
+    "name": "Autocare End-to-End Tests",
+    "description": "28 tests covering all APIs. Re-runnable with unique RUN_ID per run. Run in order.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "if (!pm.environment.get('RUN_ID') || pm.environment.get('RUN_ID') === '') {",
+          "  pm.environment.set('RUN_ID', Date.now().toString().slice(-8));",
+          "}"
+        ]
+      }
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Auth - Register Admin",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status 200',()=>pm.response.to.have.status(200));",
+              "pm.test('Success',()=>pm.expect(pm.response.json().message).to.include('successfully'));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"username\":\"admin_{{RUN_ID}}\",\"email\":\"admin_{{RUN_ID}}@test.com\",\"password\":\"Admin@123\",\"role\":[\"admin\"]}"
+        },
+        "url": {
+          "raw": "{{AUTH_URL}}/api/auth/signup",
+          "host": [
+            "{{AUTH_URL}}"
+          ],
+          "path": [
+            "api",
+            "auth",
+            "signup"
+          ]
+        }
+      }
+    },
+    {
+      "name": "2. Auth - Login Admin",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status 200',()=>pm.response.to.have.status(200));",
+              "const j=pm.response.json();pm.environment.set('ADMIN_TOKEN',j.accessToken);",
+              "pm.test('Has JWT',()=>pm.expect(j.accessToken).to.be.a('string'));",
+              "pm.test('ROLE_ADMIN',()=>pm.expect(j.roles).to.include('ROLE_ADMIN'));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"username\":\"admin_{{RUN_ID}}\",\"password\":\"Admin@123\"}"
+        },
+        "url": {
+          "raw": "{{AUTH_URL}}/api/auth/signin",
+          "host": [
+            "{{AUTH_URL}}"
+          ],
+          "path": [
+            "api",
+            "auth",
+            "signin"
+          ]
+        }
+      }
+    },
+    {
+      "name": "3. Auth - Duplicate Username 400",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status 400',()=>pm.response.to.have.status(400));",
+              "pm.test('Error msg',()=>pm.expect(pm.response.json().message).to.include('already taken'));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"username\":\"admin_{{RUN_ID}}\",\"email\":\"other_{{RUN_ID}}@test.com\",\"password\":\"Admin@123\"}"
+        },
+        "url": {
+          "raw": "{{AUTH_URL}}/api/auth/signup",
+          "host": [
+            "{{AUTH_URL}}"
+          ],
+          "path": [
+            "api",
+            "auth",
+            "signup"
+          ]
+        }
+      }
+    },
+    {
+      "name": "4. Auth - Wrong Password 401",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status 401',()=>pm.response.to.have.status(401));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"username\":\"admin_{{RUN_ID}}\",\"password\":\"Wrong\"}"
+        },
+        "url": {
+          "raw": "{{AUTH_URL}}/api/auth/signin",
+          "host": [
+            "{{AUTH_URL}}"
+          ],
+          "path": [
+            "api",
+            "auth",
+            "signin"
+          ]
+        }
+      }
+    },
+    {
+      "name": "5. Vehicle - Create",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status 201',()=>pm.response.to.have.status(201));",
+              "const j=pm.response.json();pm.environment.set('VEHICLE_ID',j.id);",
+              "pm.test('Has ID',()=>pm.expect(j.id).to.be.a('number'));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{ADMIN_TOKEN}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"vin\":\"1HGBH41JX{{RUN_ID}}\",\"make\":\"Honda\",\"model\":\"Civic\",\"year\":2023,\"ownerUsername\":\"admin_{{RUN_ID}}\"}"
+        },
+        "url": {
+          "raw": "{{MAINTENANCE_URL}}/api/v1/vehicles",
+          "host": [
+            "{{MAINTENANCE_URL}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "vehicles"
+          ]
+        }
+      }
+    },
+    {
+      "name": "6. Vehicle - Get by ID",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status 200',()=>pm.response.to.have.status(200));",
+              "pm.test('VIN matches',()=>pm.expect(pm.response.json().vin).to.include(pm.environment.get('RUN_ID')));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{ADMIN_TOKEN}}"
+          }
+        ],
+        "url": {
+          "raw": "{{MAINTENANCE_URL}}/api/v1/vehicles/{{VEHICLE_ID}}",
+          "host": [
+            "{{MAINTENANCE_URL}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "vehicles",
+            "{{VEHICLE_ID}}"
+          ]
+        }
+      }
+    },
+    {
+      "name": "7. Vehicle - Invalid VIN 400",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status 400',()=>pm.response.to.have.status(400));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{ADMIN_TOKEN}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"vin\":\"TOOSHORT\",\"make\":\"Honda\",\"model\":\"Civic\",\"year\":2023,\"ownerUsername\":\"x\"}"
+        },
+        "url": {
+          "raw": "{{MAINTENANCE_URL}}/api/v1/vehicles",
+          "host": [
+            "{{MAINTENANCE_URL}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "vehicles"
+          ]
+        }
+      }
+    },
+    {
+      "name": "8. Vehicle - No Token 401",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status 401',()=>pm.response.to.have.status(401));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{MAINTENANCE_URL}}/api/v1/vehicles",
+          "host": [
+            "{{MAINTENANCE_URL}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "vehicles"
+          ]
+        }
+      }
+    },
+    {
+      "name": "9. Technician - Create",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status 201',()=>pm.response.to.have.status(201));",
+              "pm.environment.set('TECHNICIAN_ID',pm.response.json().id);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{ADMIN_TOKEN}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"name\":\"Tech_{{RUN_ID}}\"}"
+        },
+        "url": {
+          "raw": "{{MAINTENANCE_URL}}/api/v1/technicians",
+          "host": [
+            "{{MAINTENANCE_URL}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "technicians"
+          ]
+        }
+      }
+    },
+    {
+      "name": "10. Bay - Create",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status 201',()=>pm.response.to.have.status(201));",
+              "pm.environment.set('BAY_ID',pm.response.json().id);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{ADMIN_TOKEN}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"name\":\"Bay_{{RUN_ID}}\"}"
+        },
+        "url": {
+          "raw": "{{MAINTENANCE_URL}}/api/v1/bays",
+          "host": [
+            "{{MAINTENANCE_URL}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "bays"
+          ]
+        }
+      }
+    },
+    {
+      "name": "11. Work Order - Create",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status 201',()=>pm.response.to.have.status(201));",
+              "const j=pm.response.json();pm.environment.set('WORK_ORDER_ID',j.id);",
+              "pm.test('Status OPEN',()=>pm.expect(j.status).to.equal('OPEN'));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{ADMIN_TOKEN}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"vehicleId\":{{VEHICLE_ID}},\"description\":\"Oil change\"}"
+        },
+        "url": {
+          "raw": "{{MAINTENANCE_URL}}/api/v1/work-orders",
+          "host": [
+            "{{MAINTENANCE_URL}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "work-orders"
+          ]
+        }
+      }
+    },
+    {
+      "name": "12. Work Order - Assign Tech and Bay",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status 200',()=>pm.response.to.have.status(200));",
+              "pm.test('Tech assigned',()=>pm.expect(pm.response.json().technicianId).to.equal(parseInt(pm.environment.get('TECHNICIAN_ID'))));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{ADMIN_TOKEN}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"technicianId\":{{TECHNICIAN_ID}},\"bayId\":{{BAY_ID}}}"
+        },
+        "url": {
+          "raw": "{{MAINTENANCE_URL}}/api/v1/work-orders/{{WORK_ORDER_ID}}/assign",
+          "host": [
+            "{{MAINTENANCE_URL}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "work-orders",
+            "{{WORK_ORDER_ID}}",
+            "assign"
+          ]
+        }
+      }
+    },
+    {
+      "name": "13. Work Order - Transition to IN_PROGRESS",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status 200',()=>pm.response.to.have.status(200));",
+              "pm.test('IN_PROGRESS',()=>pm.expect(pm.response.json().status).to.equal('IN_PROGRESS'));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{ADMIN_TOKEN}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"targetStatus\":\"IN_PROGRESS\"}"
+        },
+        "url": {
+          "raw": "{{MAINTENANCE_URL}}/api/v1/work-orders/{{WORK_ORDER_ID}}/status",
+          "host": [
+            "{{MAINTENANCE_URL}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "work-orders",
+            "{{WORK_ORDER_ID}}",
+            "status"
+          ]
+        }
+      }
+    },
+    {
+      "name": "14. Work Order - Invalid Transition 422",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status 422',()=>pm.response.to.have.status(422));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{ADMIN_TOKEN}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"targetStatus\":\"INVOICED\"}"
+        },
+        "url": {
+          "raw": "{{MAINTENANCE_URL}}/api/v1/work-orders/{{WORK_ORDER_ID}}/status",
+          "host": [
+            "{{MAINTENANCE_URL}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "work-orders",
+            "{{WORK_ORDER_ID}}",
+            "status"
+          ]
+        }
+      }
+    },
+    {
+      "name": "15. Parts - Add Part Line",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status 201',()=>pm.response.to.have.status(201));",
+              "pm.environment.set('PART_LINE_ID',pm.response.json().id);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{ADMIN_TOKEN}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"partName\":\"Oil filter\",\"quantity\":2,\"unitCost\":10.00}"
+        },
+        "url": {
+          "raw": "{{MAINTENANCE_URL}}/api/v1/work-orders/{{WORK_ORDER_ID}}/parts",
+          "host": [
+            "{{MAINTENANCE_URL}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "work-orders",
+            "{{WORK_ORDER_ID}}",
+            "parts"
+          ]
+        }
+      }
+    },
+    {
+      "name": "16. Labor - Add Labor Line",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status 201',()=>pm.response.to.have.status(201));",
+              "pm.environment.set('LABOR_LINE_ID',pm.response.json().id);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{ADMIN_TOKEN}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"description\":\"Oil change\",\"hours\":1.5,\"rate\":80.00}"
+        },
+        "url": {
+          "raw": "{{MAINTENANCE_URL}}/api/v1/work-orders/{{WORK_ORDER_ID}}/labor",
+          "host": [
+            "{{MAINTENANCE_URL}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "work-orders",
+            "{{WORK_ORDER_ID}}",
+            "labor"
+          ]
+        }
+      }
+    },
+    {
+      "name": "17. Work Order - Verify Total Cost 140",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status 200',()=>pm.response.to.have.status(200));",
+              "pm.test('Total cost 140',()=>pm.expect(pm.response.json().totalCost).to.equal(140.00));",
+              "pm.test('Vehicle nested',()=>pm.expect(pm.response.json().vehicle).to.be.an('object'));",
+              "pm.test('Status history',()=>pm.expect(pm.response.json().statusHistory.length).to.be.at.least(1));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{ADMIN_TOKEN}}"
+          }
+        ],
+        "url": {
+          "raw": "{{MAINTENANCE_URL}}/api/v1/work-orders/{{WORK_ORDER_ID}}",
+          "host": [
+            "{{MAINTENANCE_URL}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "work-orders",
+            "{{WORK_ORDER_ID}}"
+          ]
+        }
+      }
+    },
+    {
+      "name": "18. Work Order - Transition to COMPLETED",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status 200',()=>pm.response.to.have.status(200));",
+              "pm.test('COMPLETED',()=>pm.expect(pm.response.json().status).to.equal('COMPLETED'));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{ADMIN_TOKEN}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"targetStatus\":\"COMPLETED\"}"
+        },
+        "url": {
+          "raw": "{{MAINTENANCE_URL}}/api/v1/work-orders/{{WORK_ORDER_ID}}/status",
+          "host": [
+            "{{MAINTENANCE_URL}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "work-orders",
+            "{{WORK_ORDER_ID}}",
+            "status"
+          ]
+        }
+      }
+    },
+    {
+      "name": "19. Parts - Add to Closed WO 422",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status 422',()=>pm.response.to.have.status(422));",
+              "pm.test('Closed WO msg',()=>pm.expect(pm.response.json().message).to.include('closed work order'));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{ADMIN_TOKEN}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"partName\":\"Brake pad\",\"quantity\":1,\"unitCost\":45.00}"
+        },
+        "url": {
+          "raw": "{{MAINTENANCE_URL}}/api/v1/work-orders/{{WORK_ORDER_ID}}/parts",
+          "host": [
+            "{{MAINTENANCE_URL}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "work-orders",
+            "{{WORK_ORDER_ID}}",
+            "parts"
+          ]
+        }
+      }
+    },
+    {
+      "name": "20. Work Order - Transition to INVOICED",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status 200',()=>pm.response.to.have.status(200));",
+              "pm.test('INVOICED',()=>pm.expect(pm.response.json().status).to.equal('INVOICED'));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{ADMIN_TOKEN}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"targetStatus\":\"INVOICED\"}"
+        },
+        "url": {
+          "raw": "{{MAINTENANCE_URL}}/api/v1/work-orders/{{WORK_ORDER_ID}}/status",
+          "host": [
+            "{{MAINTENANCE_URL}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "work-orders",
+            "{{WORK_ORDER_ID}}",
+            "status"
+          ]
+        }
+      }
+    },
+    {
+      "name": "21. Schedule - Create",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "exec": [
+              "const d=new Date();d.setDate(d.getDate()+1);pm.environment.set('SCHEDULED_AT',d.toISOString().slice(0,19));"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status 201',()=>pm.response.to.have.status(201));",
+              "pm.environment.set('SCHEDULE_ID',pm.response.json().id);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{ADMIN_TOKEN}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"vehicleId\":{{VEHICLE_ID}},\"scheduledAt\":\"{{SCHEDULED_AT}}\",\"serviceType\":\"Inspection\",\"bayId\":{{BAY_ID}}}"
+        },
+        "url": {
+          "raw": "{{MAINTENANCE_URL}}/api/v1/schedules",
+          "host": [
+            "{{MAINTENANCE_URL}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "schedules"
+          ]
+        }
+      }
+    },
+    {
+      "name": "22. Schedule - Bay Conflict 409",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status 409',()=>pm.response.to.have.status(409));",
+              "pm.test('Conflict msg',()=>pm.expect(pm.response.json().message).to.include('not available'));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{ADMIN_TOKEN}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"vehicleId\":{{VEHICLE_ID}},\"scheduledAt\":\"{{SCHEDULED_AT}}\",\"serviceType\":\"Conflict\",\"bayId\":{{BAY_ID}}}"
+        },
+        "url": {
+          "raw": "{{MAINTENANCE_URL}}/api/v1/schedules",
+          "host": [
+            "{{MAINTENANCE_URL}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "schedules"
+          ]
+        }
+      }
+    },
+    {
+      "name": "23. Schedule - List by Vehicle",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status 200',()=>pm.response.to.have.status(200));",
+              "pm.test('Has schedules',()=>pm.expect(pm.response.json().content.length).to.be.at.least(1));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{ADMIN_TOKEN}}"
+          }
+        ],
+        "url": {
+          "raw": "{{MAINTENANCE_URL}}/api/v1/schedules?vehicleId={{VEHICLE_ID}}",
+          "host": [
+            "{{MAINTENANCE_URL}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "schedules"
+          ],
+          "query": [
+            {
+              "key": "vehicleId",
+              "value": "{{VEHICLE_ID}}"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "24. Schedule - Cancel",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status 204',()=>pm.response.to.have.status(204));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "DELETE",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{ADMIN_TOKEN}}"
+          }
+        ],
+        "url": {
+          "raw": "{{MAINTENANCE_URL}}/api/v1/schedules/{{SCHEDULE_ID}}",
+          "host": [
+            "{{MAINTENANCE_URL}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "schedules",
+            "{{SCHEDULE_ID}}"
+          ]
+        }
+      }
+    },
+    {
+      "name": "25. Technician - List",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status 200',()=>pm.response.to.have.status(200));",
+              "pm.test('Has technicians',()=>pm.expect(pm.response.json().length).to.be.at.least(1));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{ADMIN_TOKEN}}"
+          }
+        ],
+        "url": {
+          "raw": "{{MAINTENANCE_URL}}/api/v1/technicians",
+          "host": [
+            "{{MAINTENANCE_URL}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "technicians"
+          ]
+        }
+      }
+    },
+    {
+      "name": "26. Bay - List",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status 200',()=>pm.response.to.have.status(200));",
+              "pm.test('Has bays',()=>pm.expect(pm.response.json().length).to.be.at.least(1));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{ADMIN_TOKEN}}"
+          }
+        ],
+        "url": {
+          "raw": "{{MAINTENANCE_URL}}/api/v1/bays",
+          "host": [
+            "{{MAINTENANCE_URL}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "bays"
+          ]
+        }
+      }
+    },
+    {
+      "name": "27. Vehicle - Soft Delete",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status 204',()=>pm.response.to.have.status(204));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "DELETE",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{ADMIN_TOKEN}}"
+          }
+        ],
+        "url": {
+          "raw": "{{MAINTENANCE_URL}}/api/v1/vehicles/{{VEHICLE_ID}}",
+          "host": [
+            "{{MAINTENANCE_URL}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "vehicles",
+            "{{VEHICLE_ID}}"
+          ]
+        }
+      }
+    },
+    {
+      "name": "28. Vehicle - Get Deleted 404",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status 404',()=>pm.response.to.have.status(404));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{ADMIN_TOKEN}}"
+          }
+        ],
+        "url": {
+          "raw": "{{MAINTENANCE_URL}}/api/v1/vehicles/{{VEHICLE_ID}}",
+          "host": [
+            "{{MAINTENANCE_URL}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "vehicles",
+            "{{VEHICLE_ID}}"
+          ]
+        }
+      }
+    },
+    {
+      "name": "29. Work Order - List with Filter",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status 200',()=>pm.response.to.have.status(200));",
+              "pm.test('Page structure',()=>pm.expect(pm.response.json()).to.have.property('content'));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{ADMIN_TOKEN}}"
+          }
+        ],
+        "url": {
+          "raw": "{{MAINTENANCE_URL}}/api/v1/work-orders?status=INVOICED",
+          "host": [
+            "{{MAINTENANCE_URL}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "work-orders"
+          ],
+          "query": [
+            {
+              "key": "status",
+              "value": "INVOICED"
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

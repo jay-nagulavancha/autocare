@@ -1,0 +1,39 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: autocare-ingress
+  namespace: autocare
+  annotations:
+    kubernetes.io/ingress.class: alb
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/target-type: ip
+    alb.ingress.kubernetes.io/certificate-arn: <ACM_CERTIFICATE_ARN>
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTP":80},{"HTTPS":443}]'
+    alb.ingress.kubernetes.io/ssl-redirect: "443"
+spec:
+  # ingressClassName preferred by ALB controller v2.x+; annotation kept for backward compatibility
+  ingressClassName: alb
+  rules:
+    - http:
+        paths:
+          - path: /api/auth/
+            pathType: Prefix
+            backend:
+              service:
+                name: user-auth-service
+                port:
+                  number: 8080
+          - path: /api/v1/
+            pathType: Prefix
+            backend:
+              service:
+                name: vehicle-maintenance-service
+                port:
+                  number: 8081
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: vehicle-maintenance-ui
+                port:
+                  number: 3000

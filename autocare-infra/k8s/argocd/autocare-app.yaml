@@ -1,0 +1,32 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: autocare
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+
+  source:
+    repoURL: https://github.com/jay-nagulavancha/autocare
+    targetRevision: HEAD
+    path: k8s/
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: autocare
+
+  syncPolicy:
+    automated:
+      selfHeal: true
+      prune: true
+    syncOptions:
+      - CreateNamespace=true
+      - PrunePropagationPolicy=foreground
+      - PruneLast=true
+
+  # Health assessment: ArgoCD monitors Deployment rollout status using pod
+  # readiness probes. If health checks fail after a sync, ArgoCD automatically
+  # rolls back to the previous Git revision.
+  revisionHistoryLimit: 10
