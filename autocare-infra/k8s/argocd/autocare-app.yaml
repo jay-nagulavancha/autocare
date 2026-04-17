@@ -33,7 +33,5 @@ spec:
       - PrunePropagationPolicy=foreground
       - PruneLast=true
 
-  # Health assessment: ArgoCD monitors Deployment rollout status using pod
-  # readiness probes. If health checks fail after a sync, ArgoCD automatically
-  # rolls back to the previous Git revision.
-  revisionHistoryLimit: 10
+  # How many past Git syncs Argo CD keeps in the UI History (lower = shorter list).
+  revisionHistoryLimit: 5
