@@ -11,7 +11,7 @@ spec:
   source:
     repoURL: https://github.com/jay-nagulavancha/autocare
     targetRevision: HEAD
-    path: k8s/
+    path: autocare-infra/k8s/
 
   destination:
     server: https://kubernetes.default.svc
