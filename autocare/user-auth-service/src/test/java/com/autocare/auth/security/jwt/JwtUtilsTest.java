@@ -12,6 +12,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.security.Key;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 
@@ -48,6 +49,20 @@ class JwtUtilsTest {
         String parsed = jwtUtils.getUserNameFromJwtToken(token);
 
         assertThat(parsed).isEqualTo(username);
+    }
+
+    /** Base64 of 24 bytes — too short for HS256 directly; must derive via SHA-256. */
+    @Test
+    void shortBase64DecodedSecret_stillSignsAndValidatesToken() {
+        byte[] twentyFour = new byte[24];
+        Arrays.fill(twentyFour, (byte) 7);
+        ReflectionTestUtils.setField(jwtUtils, "jwtSecret", Encoders.BASE64.encode(twentyFour));
+
+        Authentication auth = mockAuthentication("shortkeyuser");
+        String token = jwtUtils.generateJwtToken(auth);
+
+        assertThat(jwtUtils.validateJwtToken(token)).isTrue();
+        assertThat(jwtUtils.getUserNameFromJwtToken(token)).isEqualTo("shortkeyuser");
     }
 
     @Test

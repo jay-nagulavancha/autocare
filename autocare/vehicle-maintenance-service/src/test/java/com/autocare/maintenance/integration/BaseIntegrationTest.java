@@ -7,6 +7,10 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -78,7 +82,7 @@ public abstract class BaseIntegrationTest {
     }
 
     private String buildToken(String username, List<String> roles) {
-        Key key = Keys.hmacShaKeyFor(Decoders.BASE64.decode(jwtSecret));
+        Key key = jwtSigningKey();
         return Jwts.builder()
                 .setSubject(username)
                 .claim("roles", roles)
@@ -86,6 +90,26 @@ public abstract class BaseIntegrationTest {
                 .setExpiration(new Date(System.currentTimeMillis() + 86400000))
                 .signWith(key, SignatureAlgorithm.HS256)
                 .compact();
+    }
+
+    /** Same rules as {@code com.autocare.maintenance.security.jwt.JwtUtils} signing key. */
+    private Key jwtSigningKey() {
+        byte[] material;
+        try {
+            material = Decoders.BASE64.decode(jwtSecret.trim());
+        } catch (IllegalArgumentException ex) {
+            material = jwtSecret.getBytes(StandardCharsets.UTF_8);
+        }
+        byte[] hmacKey = material.length >= 32 ? material : sha256(material);
+        return Keys.hmacShaKeyFor(hmacKey);
+    }
+
+    private static byte[] sha256(byte[] input) {
+        try {
+            return MessageDigest.getInstance("SHA-256").digest(input);
+        } catch (NoSuchAlgorithmException e) {
+            throw new IllegalStateException("SHA-256 not available", e);
+        }
     }
 
     // ─── Entity helpers ───────────────────────────────────────────────────────
