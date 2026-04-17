@@ -1,6 +1,9 @@
 package com.autocare.auth.security.jwt;
 
+import java.nio.charset.StandardCharsets;
 import java.security.Key;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.Date;
 import java.util.List;
 
@@ -41,7 +44,30 @@ public class JwtUtils {
     }
 
     private Key key() {
-        return Keys.hmacShaKeyFor(Decoders.BASE64.decode(jwtSecret));
+        byte[] material = decodeSecretMaterial(jwtSecret.trim());
+        byte[] hmacKey = material.length >= 32 ? material : sha256(material);
+        return Keys.hmacShaKeyFor(hmacKey);
+    }
+
+    /**
+     * Prefer Base64-decoded bytes (legacy deploys). If the value is not Base64, use UTF-8 bytes.
+     * When decoded material is shorter than 256 bits, derive a 256-bit key with SHA-256 so jjwt
+     * accepts it (WeakKeyException for short raw HMAC keys under 256 bits).
+     */
+    private static byte[] decodeSecretMaterial(String secret) {
+        try {
+            return Decoders.BASE64.decode(secret);
+        } catch (IllegalArgumentException ex) {
+            return secret.getBytes(StandardCharsets.UTF_8);
+        }
+    }
+
+    private static byte[] sha256(byte[] input) {
+        try {
+            return MessageDigest.getInstance("SHA-256").digest(input);
+        } catch (NoSuchAlgorithmException e) {
+            throw new IllegalStateException("SHA-256 not available", e);
+        }
     }
 
     public String getUserNameFromJwtToken(String token) {

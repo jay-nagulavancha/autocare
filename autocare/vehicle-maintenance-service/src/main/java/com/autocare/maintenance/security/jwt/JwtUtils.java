@@ -10,7 +10,10 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.stereotype.Component;
 
+import java.nio.charset.StandardCharsets;
 import java.security.Key;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -24,7 +27,25 @@ public class JwtUtils {
     private String jwtSecret;
 
     private Key key() {
-        return Keys.hmacShaKeyFor(Decoders.BASE64.decode(jwtSecret));
+        byte[] material = decodeSecretMaterial(jwtSecret.trim());
+        byte[] hmacKey = material.length >= 32 ? material : sha256(material);
+        return Keys.hmacShaKeyFor(hmacKey);
+    }
+
+    private static byte[] decodeSecretMaterial(String secret) {
+        try {
+            return Decoders.BASE64.decode(secret);
+        } catch (IllegalArgumentException ex) {
+            return secret.getBytes(StandardCharsets.UTF_8);
+        }
+    }
+
+    private static byte[] sha256(byte[] input) {
+        try {
+            return MessageDigest.getInstance("SHA-256").digest(input);
+        } catch (NoSuchAlgorithmException e) {
+            throw new IllegalStateException("SHA-256 not available", e);
+        }
     }
 
     public boolean validateJwtToken(String authToken) {
