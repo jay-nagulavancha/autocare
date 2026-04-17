@@ -114,12 +114,12 @@ jobs:
           SHA: ${{ github.sha }}
           ECR: ${{ secrets.ECR_REGISTRY }}
         run: |
-          # Target only the image: line to avoid matching comments or other fields
-          sed -i "s|image: ${ECR}/autocare/user-auth-service:.*|image: ${ECR}/autocare/user-auth-service:${SHA}|g" \
+          # Replace <ECR_URL>/service:<TAG> placeholder OR existing ECR URL with new tag
+          sed -i "s|image: .*autocare/user-auth-service:.*|image: ${ECR}/autocare/user-auth-service:${SHA}|g" \
             autocare-infra/k8s/deployments/user-auth-service.yaml
-          sed -i "s|image: ${ECR}/autocare/vehicle-maintenance-service:.*|image: ${ECR}/autocare/vehicle-maintenance-service:${SHA}|g" \
+          sed -i "s|image: .*autocare/vehicle-maintenance-service:.*|image: ${ECR}/autocare/vehicle-maintenance-service:${SHA}|g" \
             autocare-infra/k8s/deployments/vehicle-maintenance-service.yaml
-          sed -i "s|image: ${ECR}/autocare/vehicle-maintenance-ui:.*|image: ${ECR}/autocare/vehicle-maintenance-ui:${SHA}|g" \
+          sed -i "s|image: .*autocare/vehicle-maintenance-ui:.*|image: ${ECR}/autocare/vehicle-maintenance-ui:${SHA}|g" \
             autocare-infra/k8s/deployments/vehicle-maintenance-ui.yaml
 
       - name: Commit and push updated manifests
@@ -127,5 +127,6 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add autocare-infra/k8s/deployments/
+          git diff --staged --quiet && echo "No manifest changes to commit" && exit 0
           git commit -m "chore: update image tags to ${{ github.sha }} [skip ci]"
           git push
