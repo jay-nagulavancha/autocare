@@ -10,8 +10,8 @@
 # Usage:
 #   export GITHUB_REPO=YOUR_ORG/YOUR_REPO   (e.g. acme/autocare-infra)
 #   export AWS_REGION=us-west-2
-#   export VITE_AUTH_API_URL=https://autocare.yourdomain.com/api/auth
-#   export VITE_MAINTENANCE_API_URL=https://autocare.yourdomain.com/api/v1
+#   export VITE_AUTH_API_URL=https://autocare.yourdomain.com
+#   export VITE_MAINTENANCE_API_URL=https://autocare.yourdomain.com
 #   ./autocare-infra/scripts/03-configure-github-secrets.sh
 
 set -euo pipefail
