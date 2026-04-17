@@ -72,16 +72,23 @@ spec:
                 secretKeyRef:
                   name: autocare-secrets
                   key: JWT_SECRET
+          startupProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8080
+            failureThreshold: 24
+            periodSeconds: 5
           livenessProbe:
             tcpSocket:
               port: 8080
-            initialDelaySeconds: 30
-            periodSeconds: 10
+            initialDelaySeconds: 0
+            periodSeconds: 15
             failureThreshold: 3
           readinessProbe:
             httpGet:
               path: /actuator/health
               port: 8080
-            initialDelaySeconds: 30
+            initialDelaySeconds: 0
             periodSeconds: 10
             failureThreshold: 3
+            timeoutSeconds: 5
