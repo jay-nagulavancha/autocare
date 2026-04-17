@@ -85,14 +85,16 @@ echo "  ✓ External Secrets Operator installed"
 echo ""
 echo "▶ Step 4/9 — Install AWS Load Balancer Controller"
 
-# Get the LBC IAM role ARN from Terraform outputs
+# Get the LBC IAM role ARN and VPC ID from Terraform outputs
 LBC_ROLE_ARN=$(cd "$REPO_ROOT/autocare-infra/infra" && \
-  terraform output -raw lbc_role_arn 2>/dev/null || echo "")
+  AWS_DEFAULT_REGION="$AWS_REGION" terraform output -raw lbc_role_arn 2>/dev/null || echo "")
+VPC_ID=$(cd "$REPO_ROOT/autocare-infra/infra" && \
+  AWS_DEFAULT_REGION="$AWS_REGION" terraform output -raw vpc_id 2>/dev/null || echo "")
 
 if [[ -z "$LBC_ROLE_ARN" ]]; then
   echo "  ⚠ Could not read lbc_role_arn from Terraform outputs"
-  echo "  You may need to add an LBC IAM role to the IAM module."
-  echo "  Skipping LBC install — install manually after adding the IAM role."
+  echo "  Run: cd autocare-infra/infra && terraform apply"
+  echo "  Skipping LBC install — install manually after Terraform creates the LBC IAM role."
 else
   # Create service account with IRSA annotation
   kubectl create serviceaccount aws-load-balancer-controller \
@@ -105,13 +107,24 @@ else
   helm repo add eks https://aws.github.io/eks-charts 2>/dev/null || true
   helm repo update
 
+  LBC_HELM_ARGS=(
+    --namespace kube-system
+    --set "clusterName=$CLUSTER_NAME"
+    --set "region=$AWS_REGION"
+    --set "defaultTargetType=ip"
+    --set serviceAccount.create=false
+    --set serviceAccount.name=aws-load-balancer-controller
+  )
+  if [[ -n "$VPC_ID" ]]; then
+    LBC_HELM_ARGS+=(--set "vpcId=$VPC_ID")
+  else
+    echo "  ⚠ vpc_id not in Terraform outputs — LBC may still work if nodes can infer VPC"
+  fi
+
   helm upgrade --install aws-load-balancer-controller eks/aws-load-balancer-controller \
-    --namespace kube-system \
-    --set clusterName="$CLUSTER_NAME" \
-    --set serviceAccount.create=false \
-    --set serviceAccount.name=aws-load-balancer-controller \
+    "${LBC_HELM_ARGS[@]}" \
     --wait \
-    --timeout 120s
+    --timeout 10m
   echo "  ✓ AWS Load Balancer Controller installed"
 fi
 

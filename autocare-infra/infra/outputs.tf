@@ -35,3 +35,13 @@ output "irsa_role_arn" {
   description = "IAM role ARN for the autocare-sa Kubernetes service account (IRSA)"
   value       = module.iam.irsa_role_arn
 }
+
+output "lbc_role_arn" {
+  description = "IAM role ARN for the AWS Load Balancer Controller service account (IRSA)"
+  value       = module.iam.lbc_role_arn
+}
+
+output "vpc_id" {
+  description = "VPC ID for the EKS cluster — used by AWS Load Balancer Controller Helm install"
+  value       = module.vpc.vpc_id
+}

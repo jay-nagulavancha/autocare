@@ -127,8 +127,8 @@ resource "aws_iam_role" "cicd" {
 data "aws_iam_policy_document" "cicd_permissions" {
   # ECR auth token — does not support resource-level restrictions
   statement {
-    sid    = "ECRAuthToken"
-    effect = "Allow"
+    sid       = "ECRAuthToken"
+    effect    = "Allow"
     actions   = ["ecr:GetAuthorizationToken"]
     resources = ["*"]
   }
@@ -188,4 +188,63 @@ resource "aws_iam_policy" "cicd_permissions" {
 resource "aws_iam_role_policy_attachment" "cicd_permissions" {
   role       = aws_iam_role.cicd.name
   policy_arn = aws_iam_policy.cicd_permissions.arn
+}
+
+# ============================================================================
+# IRSA role for AWS Load Balancer Controller (kube-system / aws-load-balancer-controller)
+# ============================================================================
+# Policy JSON from upstream (keep in sync with controller chart / AWS API additions):
+# https://github.com/kubernetes-sigs/aws-load-balancer-controller/blob/v2.10.0/docs/install/iam_policy.json
+
+data "aws_iam_policy_document" "lbc_trust" {
+  statement {
+    effect = "Allow"
+
+    principals {
+      type        = "Federated"
+      identifiers = [var.oidc_provider_arn]
+    }
+
+    actions = ["sts:AssumeRoleWithWebIdentity"]
+
+    condition {
+      test     = "StringEquals"
+      variable = "${var.oidc_provider_url}:sub"
+      values   = ["system:serviceaccount:kube-system:aws-load-balancer-controller"]
+    }
+
+    condition {
+      test     = "StringEquals"
+      variable = "${var.oidc_provider_url}:aud"
+      values   = ["sts.amazonaws.com"]
+    }
+  }
+}
+
+resource "aws_iam_role" "lbc" {
+  name               = "${var.cluster_name}-aws-lbc-controller"
+  assume_role_policy = data.aws_iam_policy_document.lbc_trust.json
+
+  tags = {
+    Name        = "${var.cluster_name}-aws-lbc-controller"
+    Environment = "production"
+    ManagedBy   = "terraform"
+  }
+}
+
+resource "aws_iam_policy" "lbc" {
+  name        = "${var.cluster_name}-aws-lbc"
+  description = "AWS Load Balancer Controller — see lbc_iam_policy.json"
+  policy      = file("${path.module}/lbc_iam_policy.json")
+
+  tags = {
+    Name        = "${var.cluster_name}-aws-lbc"
+    Environment = "production"
+    ManagedBy   = "terraform"
+  }
+}
+
+resource "aws_iam_role_policy_attachment" "lbc" {
+  role       = aws_iam_role.lbc.name
+  policy_arn = aws_iam_policy.lbc.arn
 }
