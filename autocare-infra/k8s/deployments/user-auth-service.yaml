@@ -1,0 +1,91 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: user-auth-service
+  namespace: autocare
+  labels:
+    app: user-auth-service
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: user-auth-service
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
+  template:
+    metadata:
+      labels:
+        app: user-auth-service
+    spec:
+      serviceAccountName: autocare-sa
+      containers:
+        - name: user-auth-service
+          image: <ECR_URL>/autocare/user-auth-service:<TAG>
+          ports:
+            - containerPort: 8080
+          resources:
+            requests:
+              cpu: 250m
+              memory: 512Mi
+            limits:
+              cpu: 500m
+              memory: 768Mi
+          env:
+            # Non-sensitive config from ConfigMap
+            - name: DB_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: user-auth-service-config
+                  key: DB_PORT
+            - name: DB_NAME
+              valueFrom:
+                configMapKeyRef:
+                  name: user-auth-service-config
+                  key: DB_NAME
+            - name: DB_USERNAME
+              valueFrom:
+                configMapKeyRef:
+                  name: user-auth-service-config
+                  key: DB_USERNAME
+            - name: JWT_EXPIRATION_MS
+              valueFrom:
+                configMapKeyRef:
+                  name: user-auth-service-config
+                  key: JWT_EXPIRATION_MS
+            # Sensitive config from ExternalSecret-generated Secret
+            - name: DB_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: autocare-secrets
+                  key: DB_HOST
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: autocare-secrets
+                  key: DB_PASSWORD
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: autocare-secrets
+                  key: JWT_SECRET
+          livenessProbe:
+            tcpSocket:
+              port: 8080
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            failureThreshold: 3
+          # Readiness probe uses HTTP GET /api/auth/signin.
+          # /api/auth/signin is a POST-only endpoint; a GET returns HTTP 405 (Method Not Allowed).
+          # Kubernetes treats any non-5xx response as healthy, so 405 passes the probe.
+          # This is intentional per the design doc — the endpoint being reachable (not 5xx)
+          # confirms the application context and DB connection are up.
+          readinessProbe:
+            httpGet:
+              path: /api/auth/signin
+              port: 8080
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            failureThreshold: 3

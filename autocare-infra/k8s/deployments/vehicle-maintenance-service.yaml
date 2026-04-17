@@ -1,0 +1,82 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vehicle-maintenance-service
+  namespace: autocare
+  labels:
+    app: vehicle-maintenance-service
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: vehicle-maintenance-service
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
+  template:
+    metadata:
+      labels:
+        app: vehicle-maintenance-service
+    spec:
+      serviceAccountName: autocare-sa
+      containers:
+        - name: vehicle-maintenance-service
+          image: <ECR_URL>/autocare/vehicle-maintenance-service:<TAG>
+          ports:
+            - containerPort: 8081
+          resources:
+            requests:
+              cpu: 250m
+              memory: 512Mi
+            limits:
+              cpu: 500m
+              memory: 768Mi
+          env:
+            # Non-sensitive config from ConfigMap
+            - name: DB_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: vehicle-maintenance-service-config
+                  key: DB_PORT
+            - name: DB_NAME
+              valueFrom:
+                configMapKeyRef:
+                  name: vehicle-maintenance-service-config
+                  key: DB_NAME
+            - name: DB_USERNAME
+              valueFrom:
+                configMapKeyRef:
+                  name: vehicle-maintenance-service-config
+                  key: DB_USERNAME
+            # Sensitive config from ExternalSecret-generated Secret
+            - name: DB_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: autocare-secrets
+                  key: DB_HOST
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: autocare-secrets
+                  key: DB_PASSWORD
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: autocare-secrets
+                  key: JWT_SECRET
+          livenessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8081
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8081
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            failureThreshold: 3

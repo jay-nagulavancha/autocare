@@ -29,3 +29,23 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### Terraform ###
+**/.terraform/
+*.tfstate
+*.tfstate.backup
+*.tfstate.lock.info
+*.tfvars
+!*.tfvars.example
+autocare-infra/infra/modules/auto-shutdown/auto_shutdown.zip
+
+### Environment secrets ###
+autocare/.env
+.env
+.env.local
+
+### Node ###
+node_modules/
+
+### macOS ###
+.DS_Store

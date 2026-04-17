@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: vehicle-maintenance-ui-config
+  namespace: autocare
+data:
+  VITE_AUTH_API_URL: "https://<DOMAIN>/api/auth"
+  VITE_MAINTENANCE_API_URL: "https://<DOMAIN>/api/v1"

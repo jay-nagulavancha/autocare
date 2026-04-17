@@ -1,0 +1,61 @@
+name: Kubernetes Manifest Validate
+
+on:
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  k8s-validate:
+    name: Kubernetes Manifest Static Analysis
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install kubeconform
+        run: |
+          curl -sSL https://github.com/yannh/kubeconform/releases/latest/download/kubeconform-linux-amd64.tar.gz \
+            | tar -xz -C /usr/local/bin kubeconform
+          kubeconform -v
+
+      - name: Install kube-score
+        run: |
+          curl -sSL https://github.com/zegl/kube-score/releases/latest/download/kube-score_linux_amd64.tar.gz \
+            | tar -xz -C /usr/local/bin kube-score
+          kube-score version
+
+      - name: Install conftest
+        run: |
+          curl -sSL https://github.com/open-policy-agent/conftest/releases/latest/download/conftest_Linux_x86_64.tar.gz \
+            | tar -xz -C /usr/local/bin conftest
+          conftest --version
+
+      - name: kubeconform — validate against Kubernetes 1.29 schema
+        # --ignore-missing-schemas handles CRDs (ExternalSecret, ArgoCD Application)
+        # that don't have entries in the upstream Kubernetes JSON schema registry
+        working-directory: autocare-infra
+        run: |
+          find k8s -name '*.yaml' | \
+            kubeconform \
+              -kubernetes-version 1.29.0 \
+              -ignore-missing-schemas \
+              -strict \
+              -summary
+
+      - name: kube-score — check best practices
+        working-directory: autocare-infra
+        run: |
+          find k8s/deployments k8s/services k8s/hpa k8s/ingress -name '*.yaml' | \
+            xargs kube-score score \
+              --ignore-test pod-networkpolicy \
+              --ignore-test container-security-context-readonlyrootfilesystem
+
+      - name: conftest — enforce OPA policies
+        working-directory: autocare-infra
+        run: |
+          conftest test k8s/ --policy policy/ --recursive --all-namespaces

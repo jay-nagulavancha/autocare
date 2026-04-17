@@ -1,0 +1,99 @@
+version: '3.9'
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Autocare — full-stack local development
+#
+# Usage:
+#   cp .env.example .env          # fill in JWT_SECRET and DB_PASSWORD
+#   docker compose up --build
+#
+# Ports:
+#   user-auth-service          → http://localhost:8080
+#   vehicle-maintenance-service → http://localhost:8081
+#   vehicle-maintenance-ui      → http://localhost:3000
+#   mysql                       → localhost:3306 (host access only)
+# ─────────────────────────────────────────────────────────────────────────────
+
+services:
+
+  # ── MySQL ──────────────────────────────────────────────────────────────────
+  mysql:
+    image: mysql:8.0
+    container_name: autocare-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
+      MYSQL_DATABASE: auth_db          # first DB; maintenance_db created by init script
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./db/user-auth-service/init.sql:/docker-entrypoint-initdb.d/01-auth.sql:ro
+      - ./db/vehicle-maintenance-service/init.sql:/docker-entrypoint-initdb.d/02-maintenance.sql:ro
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${DB_PASSWORD}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  # ── Auth Service ───────────────────────────────────────────────────────────
+  user-auth-service:
+    build:
+      context: ./user-auth-service
+      dockerfile: Dockerfile
+    container_name: autocare-auth
+    restart: unless-stopped
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_NAME: auth_db
+      DB_USERNAME: root
+      DB_PASSWORD: ${DB_PASSWORD}
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRATION_MS: ${JWT_EXPIRATION_MS:-86400000}
+    ports:
+      - "8080:8080"
+
+  # ── Maintenance Service ────────────────────────────────────────────────────
+  vehicle-maintenance-service:
+    build:
+      context: ./vehicle-maintenance-service
+      dockerfile: Dockerfile
+    container_name: autocare-maintenance
+    restart: unless-stopped
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_NAME: maintenance_db
+      DB_USERNAME: root
+      DB_PASSWORD: ${DB_PASSWORD}
+      JWT_SECRET: ${JWT_SECRET}
+    ports:
+      - "8081:8081"
+
+  # ── UI ─────────────────────────────────────────────────────────────────────
+  vehicle-maintenance-ui:
+    build:
+      context: ./vehicle-maintenance-ui
+      dockerfile: Dockerfile
+      args:
+        VITE_AUTH_API_URL: http://localhost:8080
+        VITE_MAINTENANCE_API_URL: http://localhost:8081
+    container_name: autocare-ui
+    restart: unless-stopped
+    depends_on:
+      - user-auth-service
+      - vehicle-maintenance-service
+    ports:
+      - "3000:3000"
+
+volumes:
+  mysql_data:
+    driver: local
