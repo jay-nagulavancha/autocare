@@ -1,7 +1,8 @@
 import { useState, type FormEvent } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { authClient } from '../api/authClient';
-import type { MessageResponse } from '../types';
+import { useAuth } from '../context/AuthContext';
+import type { MessageResponse, SignInResponse } from '../types';
 
 export default function RegisterPage() {
   const [username, setUsername] = useState('');
@@ -10,6 +11,7 @@ export default function RegisterPage() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const { login } = useAuth();
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -17,11 +19,17 @@ export default function RegisterPage() {
     setLoading(true);
     try {
       await authClient.post<MessageResponse>('/api/auth/signup', { username, email, password });
-      navigate('/login');
+      const res = await authClient.post<SignInResponse>('/api/auth/signin', { username, password });
+      const { accessToken, id, email: userEmail, roles } = res.data;
+      login(accessToken, { id, username: res.data.username, email: userEmail, roles });
+      navigate('/');
     } catch (err: unknown) {
       const axiosErr = err as { response?: { status?: number; data?: { message?: string } } };
-      if (axiosErr.response?.status === 400) {
-        setError(axiosErr.response.data?.message ?? 'Registration failed. Please check your input.');
+      const status = axiosErr.response?.status;
+      if (status === 400) {
+        setError(axiosErr.response?.data?.message ?? 'Registration failed. Please check your input.');
+      } else if (status === 401) {
+        setError('Account was created but automatic sign-in failed. Please sign in manually.');
       } else {
         setError('Unable to reach the server. Please check your connection.');
       }
