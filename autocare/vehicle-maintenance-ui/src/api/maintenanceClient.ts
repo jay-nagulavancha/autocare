@@ -1,7 +1,8 @@
 import axios from 'axios';
+import { getMaintenanceApiBase } from '../config/runtimeEnv';
 
 export const maintenanceClient = axios.create({
-  baseURL: import.meta.env.VITE_MAINTENANCE_API_URL ?? 'http://localhost:8081',
+  baseURL: getMaintenanceApiBase(),
 });
 
 // Request interceptor — attach JWT

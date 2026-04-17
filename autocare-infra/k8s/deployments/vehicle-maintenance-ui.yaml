@@ -34,7 +34,7 @@ spec:
               cpu: 200m
               memory: 256Mi
           env:
-            # Build-time API URLs injected from ConfigMap at runtime (for reference)
+            # Consumed by the container entrypoint to generate /env-config.js (runtime) for the SPA.
             - name: VITE_AUTH_API_URL
               valueFrom:
                 configMapKeyRef:

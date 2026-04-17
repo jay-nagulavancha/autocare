@@ -77,14 +77,9 @@ spec:
             initialDelaySeconds: 30
             periodSeconds: 10
             failureThreshold: 3
-          # Readiness probe uses HTTP GET /api/auth/signin.
-          # /api/auth/signin is a POST-only endpoint; a GET returns HTTP 405 (Method Not Allowed).
-          # Kubernetes treats any non-5xx response as healthy, so 405 passes the probe.
-          # This is intentional per the design doc — the endpoint being reachable (not 5xx)
-          # confirms the application context and DB connection are up.
           readinessProbe:
             httpGet:
-              path: /api/auth/signin
+              path: /actuator/health
               port: 8080
             initialDelaySeconds: 30
             periodSeconds: 10

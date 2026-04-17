@@ -1,5 +1,6 @@
 import axios from 'axios';
+import { getAuthApiBase } from '../config/runtimeEnv';
 
 export const authClient = axios.create({
-  baseURL: import.meta.env.VITE_AUTH_API_URL ?? 'http://localhost:8080',
+  baseURL: getAuthApiBase(),
 });

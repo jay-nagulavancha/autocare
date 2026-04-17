@@ -4,5 +4,7 @@ metadata:
   name: vehicle-maintenance-ui-config
   namespace: autocare
 data:
-  VITE_AUTH_API_URL: "https://<DOMAIN>/api/auth"
-  VITE_MAINTENANCE_API_URL: "https://<DOMAIN>/api/v1"
+  # NLB hostnames (per-service LoadBalancers). When using a single ALB + Ingress, set both to
+  # the same public origin, e.g. https://app.example.com
+  VITE_AUTH_API_URL: "http://a04e51028f88b40fcb57e3af19710978-2110124889.us-west-2.elb.amazonaws.com:8080"
+  VITE_MAINTENANCE_API_URL: "http://aef710d23a2b44e5b9cf3df84f21b3b8-1585032458.us-west-2.elb.amazonaws.com:8081"
