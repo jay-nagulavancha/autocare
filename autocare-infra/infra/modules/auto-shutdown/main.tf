@@ -42,9 +42,9 @@ resource "aws_iam_role_policy" "lambda" {
         Resource = "arn:aws:logs:*:*:*"
       },
       {
-        Sid    = "CloudWatchMetrics"
-        Effect = "Allow"
-        Action = ["cloudwatch:GetMetricStatistics"]
+        Sid      = "CloudWatchMetrics"
+        Effect   = "Allow"
+        Action   = ["cloudwatch:GetMetricStatistics"]
         Resource = "*"
       },
       {
@@ -66,9 +66,9 @@ resource "aws_iam_role_policy" "lambda" {
         Resource = "*"
       },
       {
-        Sid    = "ELB"
-        Effect = "Allow"
-        Action = ["elasticloadbalancing:DescribeLoadBalancers"]
+        Sid      = "ELB"
+        Effect   = "Allow"
+        Action   = ["elasticloadbalancing:DescribeLoadBalancers"]
         Resource = "*"
       }
     ]
