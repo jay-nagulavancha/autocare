@@ -1,0 +1,200 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxGraphModel dx="1422" dy="762" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1654" pageHeight="1169" math="0" shadow="0">
+  <root>
+    <mxCell id="0" />
+    <mxCell id="1" parent="0" />
+
+    <!-- Title -->
+    <mxCell id="title" value="Autocare — AWS EKS Architecture" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=20;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="527" y="20" width="600" height="40" as="geometry" />
+    </mxCell>
+
+    <!-- ── DEVELOPER / CI ─────────────────────────────────────────── -->
+    <mxCell id="dev-group" value="Developer &amp; CI/CD" style="swimlane;startSize=30;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;fontSize=13;" vertex="1" parent="1">
+      <mxGeometry x="40" y="80" width="340" height="300" as="geometry" />
+    </mxCell>
+
+    <mxCell id="dev" value="Developer" style="shape=mxgraph.aws4.user;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="dev-group">
+      <mxGeometry x="30" y="60" width="60" height="60" as="geometry" />
+    </mxCell>
+
+    <mxCell id="github" value="GitHub Repository&#xa;(main branch)" style="shape=mxgraph.veeam.2d.repository;fillColor=#f5f5f5;strokeColor=#666666;fontColor=#333333;" vertex="1" parent="dev-group">
+      <mxGeometry x="140" y="55" width="80" height="70" as="geometry" />
+    </mxCell>
+
+    <mxCell id="gha" value="GitHub Actions&#xa;1. mvn test&#xa;2. docker build&#xa;3. push to ECR&#xa;4. update manifests&#xa;5. git commit" style="shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.general;fillColor=#FF9900;strokeColor=#E07B00;fontColor=#ffffff;fontStyle=1;" vertex="1" parent="dev-group">
+      <mxGeometry x="30" y="180" width="280" height="90" as="geometry" />
+    </mxCell>
+
+    <!-- ── AWS CLOUD ───────────────────────────────────────────────── -->
+    <mxCell id="aws-group" value="AWS Cloud (us-west-2)" style="swimlane;startSize=30;fillColor=#fff2cc;strokeColor=#d6b656;fontStyle=1;fontSize=13;" vertex="1" parent="1">
+      <mxGeometry x="420" y="80" width="1180" height="980" as="geometry" />
+    </mxCell>
+
+    <!-- ECR -->
+    <mxCell id="ecr-group" value="Amazon ECR" style="swimlane;startSize=25;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;" vertex="1" parent="aws-group">
+      <mxGeometry x="20" y="50" width="260" height="160" as="geometry" />
+    </mxCell>
+    <mxCell id="ecr1" value="autocare/&#xa;user-auth-service" style="shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.ecr;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="ecr-group">
+      <mxGeometry x="10" y="40" width="70" height="70" as="geometry" />
+    </mxCell>
+    <mxCell id="ecr2" value="autocare/&#xa;vehicle-maintenance-service" style="shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.ecr;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="ecr-group">
+      <mxGeometry x="95" y="40" width="70" height="70" as="geometry" />
+    </mxCell>
+    <mxCell id="ecr3" value="autocare/&#xa;vehicle-maintenance-ui" style="shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.ecr;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="ecr-group">
+      <mxGeometry x="180" y="40" width="70" height="70" as="geometry" />
+    </mxCell>
+
+    <!-- Secrets Manager -->
+    <mxCell id="secrets" value="AWS Secrets Manager&#xa;&#xa;autocare/jwt-secret&#xa;autocare/db-password&#xa;autocare/rds-endpoint" style="shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.secrets_manager;fillColor=#f8cecc;strokeColor=#b85450;align=center;" vertex="1" parent="aws-group">
+      <mxGeometry x="320" y="50" width="200" height="160" as="geometry" />
+    </mxCell>
+
+    <!-- CloudWatch -->
+    <mxCell id="cloudwatch" value="CloudWatch&#xa;&#xa;/autocare/user-auth-service&#xa;/autocare/vehicle-maintenance-service&#xa;/autocare/vehicle-maintenance-ui&#xa;(30-day retention)" style="shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.cloudwatch;fillColor=#E7157B;strokeColor=#E7157B;fontColor=#ffffff;align=center;" vertex="1" parent="aws-group">
+      <mxGeometry x="560" y="50" width="220" height="160" as="geometry" />
+    </mxCell>
+
+    <!-- Lambda auto-shutdown -->
+    <mxCell id="lambda" value="Lambda&#xa;auto-shutdown&#xa;&#xa;Checks ALB RequestCount&#xa;every 10 min.&#xa;Scales nodes to 0&#xa;+ stops RDS if idle 30min" style="shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.lambda;fillColor=#E7157B;strokeColor=#E7157B;fontColor=#ffffff;align=center;" vertex="1" parent="aws-group">
+      <mxGeometry x="820" y="50" width="200" height="160" as="geometry" />
+    </mxCell>
+
+    <!-- VPC -->
+    <mxCell id="vpc-group" value="VPC (10.0.0.0/16)" style="swimlane;startSize=25;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="aws-group">
+      <mxGeometry x="20" y="250" width="1140" height="710" as="geometry" />
+    </mxCell>
+
+    <!-- Public Subnets -->
+    <mxCell id="pub-group" value="Public Subnets (AZ-a 10.0.1.0/24, AZ-b 10.0.2.0/24)" style="swimlane;startSize=25;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" vertex="1" parent="vpc-group">
+      <mxGeometry x="20" y="40" width="1100" height="160" as="geometry" />
+    </mxCell>
+
+    <mxCell id="alb" value="Application Load Balancer&#xa;(internet-facing)&#xa;&#xa;:80 HTTP&#xa;/api/auth/ → auth:8080&#xa;/api/v1/ → maintenance:8081&#xa;/ → ui:3000" style="shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.application_load_balancer;fillColor=#FF9900;strokeColor=#E07B00;align=center;" vertex="1" parent="pub-group">
+      <mxGeometry x="380" y="30" width="340" height="110" as="geometry" />
+    </mxCell>
+
+    <!-- Private Subnets -->
+    <mxCell id="priv-group" value="Private Subnets (AZ-a 10.0.3.0/24, AZ-b 10.0.4.0/24)" style="swimlane;startSize=25;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="vpc-group">
+      <mxGeometry x="20" y="230" width="1100" height="460" as="geometry" />
+    </mxCell>
+
+    <!-- EKS -->
+    <mxCell id="eks-group" value="EKS Cluster (Kubernetes 1.29)  —  2× t3.medium nodes" style="swimlane;startSize=25;fillColor=#f5f5f5;strokeColor=#666666;fontSize=10;" vertex="1" parent="priv-group">
+      <mxGeometry x="20" y="40" width="820" height="400" as="geometry" />
+    </mxCell>
+
+    <!-- argocd namespace -->
+    <mxCell id="argocd-ns" value="namespace: argocd" style="swimlane;startSize=20;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=10;" vertex="1" parent="eks-group">
+      <mxGeometry x="20" y="40" width="240" height="120" as="geometry" />
+    </mxCell>
+    <mxCell id="argocd" value="ArgoCD&#xa;&#xa;Watches k8s/ in Git&#xa;Auto-sync + self-heal&#xa;Health monitoring&#xa;Auto-rollback" style="fillColor=#e1d5e7;strokeColor=#9673a6;align=center;" vertex="1" parent="argocd-ns">
+      <mxGeometry x="10" y="30" width="220" height="80" as="geometry" />
+    </mxCell>
+
+    <!-- autocare namespace -->
+    <mxCell id="autocare-ns" value="namespace: autocare" style="swimlane;startSize=20;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="eks-group">
+      <mxGeometry x="20" y="190" width="780" height="190" as="geometry" />
+    </mxCell>
+
+    <mxCell id="auth-pod" value="user-auth-service&#xa;2-6 pods (HPA)&#xa;:8080&#xa;CPU: 250m-500m&#xa;Mem: 512Mi-768Mi" style="fillColor=#dae8fc;strokeColor=#6c8ebf;align=center;" vertex="1" parent="autocare-ns">
+      <mxGeometry x="10" y="30" width="220" height="140" as="geometry" />
+    </mxCell>
+
+    <mxCell id="maint-pod" value="vehicle-maintenance-service&#xa;2-6 pods (HPA)&#xa;:8081&#xa;CPU: 250m-500m&#xa;Mem: 512Mi-768Mi" style="fillColor=#dae8fc;strokeColor=#6c8ebf;align=center;" vertex="1" parent="autocare-ns">
+      <mxGeometry x="270" y="30" width="220" height="140" as="geometry" />
+    </mxCell>
+
+    <mxCell id="ui-pod" value="vehicle-maintenance-ui&#xa;2 pods (Nginx)&#xa;:3000&#xa;CPU: 100m-200m&#xa;Mem: 128Mi-256Mi" style="fillColor=#dae8fc;strokeColor=#6c8ebf;align=center;" vertex="1" parent="autocare-ns">
+      <mxGeometry x="530" y="30" width="220" height="140" as="geometry" />
+    </mxCell>
+
+    <!-- Add-ons -->
+    <mxCell id="addons" value="Add-ons: AWS LB Controller  |  Metrics Server  |  Fluent Bit (CloudWatch)  |  External Secrets Operator" style="fillColor=#f5f5f5;strokeColor=#666666;align=center;fontSize=10;" vertex="1" parent="eks-group">
+      <mxGeometry x="20" y="340" width="780" height="40" as="geometry" />
+    </mxCell>
+
+    <!-- RDS -->
+    <mxCell id="rds" value="Amazon RDS MySQL 8.0&#xa;Multi-AZ&#xa;db.t3.micro&#xa;&#xa;auth_db&#xa;maintenance_db&#xa;&#xa;7-day backups" style="shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.rds;fillColor=#FF9900;strokeColor=#E07B00;align=center;" vertex="1" parent="priv-group">
+      <mxGeometry x="880" y="100" width="200" height="240" as="geometry" />
+    </mxCell>
+
+    <!-- ── CONNECTIONS ─────────────────────────────────────────────── -->
+
+    <!-- Dev → GitHub -->
+    <mxCell id="e1" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="dev" target="github" parent="dev-group">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+
+    <!-- GitHub → GHA -->
+    <mxCell id="e2" value="push to main" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="github" target="gha" parent="dev-group">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+
+    <!-- GHA → ECR -->
+    <mxCell id="e3" value="push images" style="edgeStyle=orthogonalEdgeStyle;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" source="gha" target="ecr-group" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+
+    <!-- GHA → GitHub (manifest commit) -->
+    <mxCell id="e4" value="commit manifest&#xa;[skip ci]" style="edgeStyle=orthogonalEdgeStyle;curved=1;" edge="1" source="gha" target="github" parent="dev-group">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+
+    <!-- GitHub → ArgoCD -->
+    <mxCell id="e5" value="watches k8s/" style="edgeStyle=orthogonalEdgeStyle;dashed=1;" edge="1" source="github" target="argocd" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+
+    <!-- ArgoCD → autocare namespace -->
+    <mxCell id="e6" value="syncs manifests" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="argocd" target="autocare-ns" parent="eks-group">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+
+    <!-- ALB → pods -->
+    <mxCell id="e7" value="/api/auth/" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="alb" target="auth-pod" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e8" value="/api/v1/" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="alb" target="maint-pod" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e9" value="/" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="alb" target="ui-pod" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+
+    <!-- Pods → RDS -->
+    <mxCell id="e10" value="port 3306" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="auth-pod" target="rds" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e11" value="port 3306" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="maint-pod" target="rds" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+
+    <!-- Secrets → pods -->
+    <mxCell id="e12" value="IRSA / ESO&#xa;1h refresh" style="edgeStyle=orthogonalEdgeStyle;dashed=1;" edge="1" source="secrets" target="autocare-ns" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+
+    <!-- Fluent Bit → CloudWatch -->
+    <mxCell id="e13" value="logs" style="edgeStyle=orthogonalEdgeStyle;dashed=1;" edge="1" source="eks-group" target="cloudwatch" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+
+    <!-- Lambda → EKS + RDS -->
+    <mxCell id="e14" value="scale nodes to 0" style="edgeStyle=orthogonalEdgeStyle;dashed=1;strokeColor=#E7157B;" edge="1" source="lambda" target="eks-group" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e15" value="stop RDS" style="edgeStyle=orthogonalEdgeStyle;dashed=1;strokeColor=#E7157B;" edge="1" source="lambda" target="rds" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+
+    <!-- Internet user → ALB -->
+    <mxCell id="internet" value="Internet&#xa;(Browser)" style="shape=mxgraph.aws4.internet_alt2;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+      <mxGeometry x="200" y="480" width="80" height="80" as="geometry" />
+    </mxCell>
+    <mxCell id="e16" value="HTTP :80" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="internet" target="alb" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+
+  </root>
+</mxGraphModel>
