@@ -48,6 +48,7 @@ jobs:
         run: |
           npm ci
           npm run test
+        # Note: skipped if no test files exist — add tests to src/**/*.test.tsx to enable
 
   # ─────────────────────────────────────────────────────────────────
   # Job 2 — Build Docker images and push to ECR
