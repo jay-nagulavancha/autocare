@@ -12,6 +12,13 @@ spec:
     repoURL: https://github.com/jay-nagulavancha/autocare
     targetRevision: HEAD
     path: autocare-infra/k8s/
+    # Without recurse, Argo CD only syncs YAML files in the path root (e.g. Namespace,
+    # ResourceQuota). Subdirectories (deployments/, services/, …) are ignored, so the UI
+    # never picked up new image tags from Git.
+    directory:
+      recurse: true
+      # This manifest updates the Application CR itself; excluding avoids a self-referential sync loop.
+      exclude: argocd/autocare-app.yaml
 
   destination:
     server: https://kubernetes.default.svc
