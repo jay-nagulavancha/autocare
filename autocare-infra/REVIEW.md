@@ -103,9 +103,8 @@ Create `autocare-infra/infra/terraform.tfvars` (excluded from git):
 ```hcl
 aws_region   = "us-west-2"
 cluster_name = "autocare-eks"
-domain_name  = "autocare.example.com"
-github_org   = "YOUR_ORG"
-github_repo  = "autocare-infra"
+github_org   = "jay-nagulavancha"
+github_repo  = "autocare"
 
 # Sensitive — never commit
 db_password = "CHANGE_ME"

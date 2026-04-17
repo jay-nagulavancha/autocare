@@ -16,11 +16,6 @@ variable "cluster_name" {
   default     = "autocare-eks"
 }
 
-variable "domain_name" {
-  description = "Domain name for the ACM certificate and ALB (e.g. autocare.example.com)"
-  type        = string
-}
-
 variable "db_password" {
   description = "MySQL root password for RDS — stored in Secrets Manager, never committed to source control"
   type        = string
