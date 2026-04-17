@@ -23,7 +23,7 @@ spec:
       serviceAccountName: autocare-sa
       containers:
         - name: user-auth-service
-          image: 626635446574.dkr.ecr.us-west-2.amazonaws.com/autocare/user-auth-service:05f743cec14dfcddb7f0803aaaad184d49410269
+          image: 626635446574.dkr.ecr.us-west-2.amazonaws.com/autocare/user-auth-service:239c9a9db24e3eb3f5901d059c23df22c39fbf1b
           ports:
             - containerPort: 8080
           resources:
