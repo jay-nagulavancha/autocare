@@ -94,7 +94,7 @@ CLUSTER_NAME    = os.environ["CLUSTER_NAME"]
 NODE_GROUP_NAME = os.environ["NODE_GROUP_NAME"]
 RDS_IDENTIFIER  = os.environ["RDS_IDENTIFIER"]
 IDLE_MINUTES    = int(os.environ.get("IDLE_MINUTES", "30"))
-AWS_REGION      = os.environ["AWS_REGION"]
+AWS_REGION      = os.environ.get("APP_REGION") or os.environ.get("AWS_DEFAULT_REGION", "us-west-2")
 
 eks = boto3.client("eks",        region_name=AWS_REGION)
 rds = boto3.client("rds",        region_name=AWS_REGION)
@@ -196,7 +196,7 @@ resource "aws_lambda_function" "auto_shutdown" {
       NODE_GROUP_NAME = var.node_group_name
       RDS_IDENTIFIER  = var.rds_identifier
       IDLE_MINUTES    = tostring(var.idle_minutes)
-      AWS_REGION      = var.aws_region
+      APP_REGION      = var.aws_region
     }
   }
 

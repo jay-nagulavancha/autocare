@@ -33,7 +33,7 @@ resource "aws_iam_role_policy_attachment" "cluster_policy" {
 
 resource "aws_eks_cluster" "this" {
   name     = var.cluster_name
-  version  = "1.29"
+  version  = "1.30"
   role_arn = aws_iam_role.cluster.arn
 
   vpc_config {
@@ -108,11 +108,18 @@ resource "aws_eks_node_group" "this" {
   subnet_ids      = var.private_subnet_ids
 
   instance_types = ["t3.medium"]
+  ami_type       = "AL2_x86_64"
 
   scaling_config {
     desired_size = 2
     min_size     = 2
     max_size     = 4
+  }
+
+  # Let AWS resolve the latest supported AMI for this cluster version
+  # Remove release_version to avoid AMI availability issues per region
+  lifecycle {
+    ignore_changes = [release_version]
   }
 
   depends_on = [

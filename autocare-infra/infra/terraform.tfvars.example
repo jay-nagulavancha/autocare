@@ -4,7 +4,6 @@
 aws_region   = "us-west-2"
 environment  = "dev"
 cluster_name = "autocare-eks"
-domain_name  = "autocare.yourdomain.com"
 github_org   = "jay-nagulavancha"
 github_repo  = "autocare"
 
