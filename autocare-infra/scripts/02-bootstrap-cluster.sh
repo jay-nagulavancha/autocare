@@ -126,6 +126,14 @@ else
     --wait \
     --timeout 10m
   echo "  ✓ AWS Load Balancer Controller installed"
+  echo ""
+  echo "  Verify (ALB is created from an Ingress, not from Service type: LoadBalancer):"
+  echo "    kubectl get ingressclass"
+  echo "    kubectl get deploy -n kube-system aws-load-balancer-controller"
+  echo "  After you apply autocare-ingress, wait 2–5 min then:"
+  echo "    kubectl get ingress -n autocare -o wide"
+  echo "  ADDRESS must show *.elb.amazonaws.com. If it stays empty, check LBC logs:"
+  echo "    kubectl logs -n kube-system -l app.kubernetes.io/name=aws-load-balancer-controller --tail=50"
 fi
 
 # ── 5. Install Metrics Server ─────────────────────────────────────────────────
