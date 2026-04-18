@@ -14,3 +14,16 @@ jwt_secret  = "CHANGE_ME_base64_encoded_256bit_key"
 # Cost optimisation — set true for dev/staging
 enable_auto_shutdown       = true
 auto_shutdown_idle_minutes = 30
+
+# --- Further cost / verification profile (optional; defaults in variables.tf are HA-style) ---
+# VPC already uses a single NAT gateway. EKS API still needs two subnets/AZs; workers can stay in one AZ.
+eks_single_az_nodes       = true
+eks_node_instance_types   = ["t3.small"]
+eks_node_desired_size     = 1
+eks_node_min_size         = 1
+eks_node_max_size         = 3
+rds_multi_az              = false
+rds_backup_retention_days = 1
+
+# After terraform apply with min nodes = 1, use matching env when running cluster-start.sh:
+#   export CLUSTER_MIN_NODES=1 CLUSTER_MAX_NODES=3

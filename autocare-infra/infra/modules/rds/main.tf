@@ -1,4 +1,4 @@
-# RDS module — MySQL 8.0 Multi-AZ instance, subnet group, security group
+# RDS module — MySQL 8.0, subnet group, security group (Multi-AZ optional)
 # Requirements: 4.1, 4.2, 4.3, 4.4, 4.6
 
 # ---------------------------------------------------------------------------
@@ -44,7 +44,7 @@ resource "aws_security_group" "rds" {
 }
 
 # ---------------------------------------------------------------------------
-# RDS MySQL 8.0 Multi-AZ instance (Requirements 4.1, 4.4, 4.6)
+# RDS MySQL 8.0 (subnet group still spans two AZs — AWS requirement for the group)
 # ---------------------------------------------------------------------------
 resource "aws_db_instance" "this" {
   identifier = "${var.cluster_name}-mysql"
@@ -62,11 +62,11 @@ resource "aws_db_instance" "this" {
   username = "root"
   password = var.db_password
 
-  multi_az               = true
+  multi_az               = var.multi_az
   db_subnet_group_name   = aws_db_subnet_group.this.name
   vpc_security_group_ids = [aws_security_group.rds.id]
 
-  backup_retention_period   = 7
+  backup_retention_period   = var.backup_retention_days
   skip_final_snapshot       = false
   final_snapshot_identifier = "${var.cluster_name}-mysql-final-snapshot"
 

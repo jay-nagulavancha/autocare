@@ -58,6 +58,20 @@ The remaining ~643 hours/month the nodes and RDS are stopped.
 | Share EKS cluster across dev/staging | ~$73/mo | More complex namespace isolation |
 | Use RDS t3.micro single-AZ for dev | ~50% off RDS | No HA (fine for dev) |
 
+### Terraform toggles (`autocare-infra/infra/terraform.tfvars`)
+
+These are implemented in Terraform (see `variables.tf` and `terraform.tfvars.example`):
+
+| Variable | Effect |
+|---|---|
+| `eks_single_az_nodes` | Node group uses only the first private subnet (single-AZ workers). |
+| `eks_node_instance_types` | e.g. `["t3.small"]` instead of `t3.medium`. |
+| `eks_node_desired_size` / `min` / `max` | Smaller floor (e.g. 1 node) for dev. |
+| `rds_multi_az` | `false` removes the standby instance (large RDS saving). |
+| `rds_backup_retention_days` | Lower (e.g. 1) reduces backup storage cost. |
+
+After setting `eks_node_min_size = 1`, run `cluster-start.sh` with `CLUSTER_MIN_NODES=1` and `CLUSTER_MAX_NODES` matching Terraform max.
+
 ---
 
 ## Auto-Shutdown Behaviour

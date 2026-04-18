@@ -23,3 +23,13 @@ variable "db_password" {
   type        = string
   sensitive   = true
 }
+
+variable "multi_az" {
+  description = "Enable RDS Multi-AZ standby (roughly doubles DB instance cost; keep false for dev/cost verification)"
+  type        = bool
+}
+
+variable "backup_retention_days" {
+  description = "Automated backup retention in days (lower = less backup storage cost)"
+  type        = number
+}
