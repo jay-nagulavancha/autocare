@@ -105,15 +105,15 @@ resource "aws_eks_node_group" "this" {
   cluster_name    = aws_eks_cluster.this.name
   node_group_name = "${var.cluster_name}-node-group"
   node_role_arn   = aws_iam_role.node.arn
-  subnet_ids      = var.private_subnet_ids
+  subnet_ids      = var.node_group_subnet_ids
 
-  instance_types = ["t3.medium"]
+  instance_types = var.node_instance_types
   ami_type       = "AL2_x86_64"
 
   scaling_config {
-    desired_size = 2
-    min_size     = 2
-    max_size     = 4
+    desired_size = var.node_desired_size
+    min_size     = var.node_min_size
+    max_size     = var.node_max_size
   }
 
   # Let AWS resolve the latest supported AMI for this cluster version

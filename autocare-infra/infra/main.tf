@@ -57,9 +57,16 @@ module "ecr" {
 # ---------------------------------------------------------------------------
 
 module "eks" {
-  source             = "./modules/eks"
+  source = "./modules/eks"
+
   cluster_name       = var.cluster_name
   private_subnet_ids = module.vpc.private_subnet_ids
+
+  node_group_subnet_ids = var.eks_single_az_nodes ? [module.vpc.private_subnet_ids[0]] : module.vpc.private_subnet_ids
+  node_instance_types   = var.eks_node_instance_types
+  node_desired_size     = var.eks_node_desired_size
+  node_min_size         = var.eks_node_min_size
+  node_max_size         = var.eks_node_max_size
 }
 
 # ---------------------------------------------------------------------------
@@ -75,12 +82,15 @@ data "aws_eks_cluster" "this" {
 }
 
 module "rds" {
-  source                     = "./modules/rds"
+  source = "./modules/rds"
+
   cluster_name               = var.cluster_name
   vpc_id                     = module.vpc.vpc_id
   private_subnet_ids         = module.vpc.private_subnet_ids
   eks_node_security_group_id = data.aws_eks_cluster.this.vpc_config[0].cluster_security_group_id
   db_password                = var.db_password
+  multi_az                   = var.rds_multi_az
+  backup_retention_days      = var.rds_backup_retention_days
 }
 
 # ---------------------------------------------------------------------------

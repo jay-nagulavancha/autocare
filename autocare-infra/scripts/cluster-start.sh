@@ -10,6 +10,9 @@ CLUSTER_NAME="${1:-autocare-eks}"
 REGION="${2:-us-west-2}"
 DESIRED_NODES="${3:-2}"
 RDS_IDENTIFIER="${CLUSTER_NAME}-mysql"
+# Align with Terraform node group min/max when using cost-optimised single-node (e.g. min=1)
+CLUSTER_MIN_NODES="${CLUSTER_MIN_NODES:-2}"
+CLUSTER_MAX_NODES="${CLUSTER_MAX_NODES:-4}"
 
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo "  Autocare Dev Cluster — START"
@@ -88,7 +91,7 @@ else
     --cluster-name "$CLUSTER_NAME" \
     --nodegroup-name "$NODE_GROUP" \
     --region "$REGION" \
-    --scaling-config minSize=2,maxSize=4,desiredSize="$DESIRED_NODES" \
+    --scaling-config "minSize=${CLUSTER_MIN_NODES},maxSize=${CLUSTER_MAX_NODES},desiredSize=${DESIRED_NODES}" \
     --query "update.id" \
     --output text
   echo "  ✓ Scale-up requested — waiting for nodes to be ready..."
