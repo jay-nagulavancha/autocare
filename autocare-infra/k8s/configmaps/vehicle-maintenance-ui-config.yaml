@@ -4,6 +4,8 @@ metadata:
   name: vehicle-maintenance-ui-config
   namespace: autocare
 data:
-  # Same origin as the Ingress ALB (HTTP :80). Paths /api/auth/* and /api/v1/* are routed by Ingress.
+  # Same ALB as Ingress (HTTP :80): /api/auth/* → auth, /api/v1/* → maintenance, / → UI.
+  # If you add a dedicated maintenance hostname in ingress (api-maintenance.YOURDOMAIN.com), set
+  # VITE_MAINTENANCE_API_URL to that origin (e.g. https://api-maintenance.example.com) so the browser calls the API host only.
   VITE_AUTH_API_URL: "http://k8s-autocare-autocare-45c48f487e-925119376.us-west-2.elb.amazonaws.com"
   VITE_MAINTENANCE_API_URL: "http://k8s-autocare-autocare-45c48f487e-925119376.us-west-2.elb.amazonaws.com"
