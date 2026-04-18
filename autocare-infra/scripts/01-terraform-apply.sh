@@ -65,4 +65,5 @@ terraform output -raw cicd_role_arn 2>/dev/null || \
   echo "  (run: cd $INFRA_DIR && terraform output cicd_role_arn)"
 echo ""
 echo "  Next: ./autocare-infra/scripts/02-bootstrap-cluster.sh"
+echo "  Full teardown: ./autocare-infra/scripts/06-terraform-destroy.sh"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
