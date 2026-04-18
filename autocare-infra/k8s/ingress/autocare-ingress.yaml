@@ -4,9 +4,6 @@ metadata:
   name: autocare-ingress
   namespace: autocare
   annotations:
-    # Dedicated maintenance host: replace spec.rules[0].host with your FQDN; DNS CNAME/ALIAS → Ingress ADDRESS.
-    # Then set UI VITE_MAINTENANCE_API_URL to that origin (see vehicle-maintenance-ui-config).
-    autocare.autocare-infra/description: "Host-specific rule routes only vehicle-maintenance-service; default rule keeps shared ALB."
     kubernetes.io/ingress.class: alb
     alb.ingress.kubernetes.io/scheme: internet-facing
     alb.ingress.kubernetes.io/target-type: ip
@@ -14,16 +11,6 @@ metadata:
 spec:
   ingressClassName: alb
   rules:
-    - host: api-maintenance.YOURDOMAIN.com
-      http:
-        paths:
-          - path: /
-            pathType: Prefix
-            backend:
-              service:
-                name: vehicle-maintenance-service
-                port:
-                  number: 8081
     - http:
         paths:
           - path: /api/auth/
