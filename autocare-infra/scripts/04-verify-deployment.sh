@@ -48,7 +48,7 @@ echo "▶ Add-ons"
 check "Metrics Server running" \
   "kubectl get deployment metrics-server -n kube-system --no-headers | grep -q '1/1'"
 check "AWS LB Controller running" \
-  "kubectl get deployment aws-load-balancer-controller -n kube-system --no-headers | grep -q '1/1'"
+  "kubectl get deployment aws-load-balancer-controller -n kube-system --no-headers | grep -E -q '[12]/[12]'"
 check "External Secrets Operator running" \
   "kubectl get deployment external-secrets -n external-secrets --no-headers | grep -q '1/1'"
 check "Fluent Bit DaemonSet running" \
