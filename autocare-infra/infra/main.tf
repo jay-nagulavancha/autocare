@@ -12,11 +12,17 @@ terraform {
     }
   }
 
-  # State file: terraform.tfstate in this directory. No S3 "region" required.
-  # To use remote S3 state instead: create a bucket + (optional) DynamoDB lock table,
-  # replace this block with backend "s3" { bucket = "..." key = "..." region = "..." encrypt = true }
-  # then run: terraform init -migrate-state
-  backend "local" {}
+  # Remote state (backend block cannot use variables — region must match the bucket's region).
+  backend "s3" {
+    bucket  = "autocare-terraform-state-123456789"
+    key     = "autocare-terraform-state-123456789.state"
+    region  = "us-west-2"
+    encrypt = true
+    # Optional: uncomment if you created a DynamoDB table for state locking
+    # dynamodb_table = "autocare-terraform-locks"
+    # Terraform 1.10+: optional S3-native locking (omit on older Terraform)
+    # use_lockfile = true
+  }
 }
 
 provider "aws" {
