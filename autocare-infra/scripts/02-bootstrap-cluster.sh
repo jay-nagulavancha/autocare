@@ -103,11 +103,12 @@ echo "▶ Step 3/9 — Install External Secrets Operator"
 helm repo add external-secrets https://charts.external-secrets.io 2>/dev/null || true
 helm repo update
 
+echo "  (Helm --wait can take several minutes on a new cluster: image pull + webhook/cert pods.)"
 helm upgrade --install external-secrets external-secrets/external-secrets \
   --namespace external-secrets \
   --create-namespace \
   --wait \
-  --timeout 120s
+  --timeout 10m
 echo "  ✓ External Secrets Operator installed"
 
 # ── 4. Install AWS Load Balancer Controller ───────────────────────────────────

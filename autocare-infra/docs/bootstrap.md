@@ -86,15 +86,19 @@ The External Secrets Operator bridges AWS Secrets Manager and Kubernetes Secrets
 ```bash
 helm repo add external-secrets https://charts.external-secrets.io
 helm repo update
-helm install external-secrets external-secrets/external-secrets \
+helm upgrade --install external-secrets external-secrets/external-secrets \
   -n external-secrets \
-  --create-namespace
+  --create-namespace \
+  --wait \
+  --timeout 10m
 ```
 
-Wait for the operator to be ready:
+If you installed without `--wait`, wait for the operator (all three deployments may need a few minutes on first pull):
 
 ```bash
-kubectl wait --for=condition=available deployment/external-secrets -n external-secrets --timeout=120s
+kubectl wait --for=condition=available deployment/external-secrets -n external-secrets --timeout=600s
+kubectl wait --for=condition=available deployment/external-secrets-webhook -n external-secrets --timeout=600s
+kubectl wait --for=condition=available deployment/external-secrets-cert-controller -n external-secrets --timeout=600s
 ```
 
 ---
