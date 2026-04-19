@@ -111,8 +111,8 @@ export TF_STATE_BUCKET=autocare-terraform-state-<account-id>
 
 # 3. Bootstrap cluster (ArgoCD, External Secrets, LBC, Metrics Server, Fluent Bit)
 export CLUSTER_NAME=autocare-eks
-export DB_PASSWORD=<your-db-password>
-export JWT_SECRET=<your-jwt-secret>
+# Optional: export DB_PASSWORD / JWT_SECRET only to rotate values in Secrets Manager.
+# If omitted, the script reads existing secrets from AWS (after terraform apply).
 ./autocare-infra/scripts/02-bootstrap-cluster.sh
 
 # 4. Set GitHub secrets
