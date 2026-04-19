@@ -78,7 +78,10 @@ kubectl cluster-info --context "$CLUSTER_NAME"
 echo ""
 echo "▶ Step 2/9 — Install ArgoCD"
 kubectl create namespace argocd --dry-run=client -o yaml | kubectl apply -f -
-kubectl apply -n argocd \
+# Server-side apply: client-side apply stores last-applied-configuration on each object;
+# the ApplicationSet CRD exceeds the 256KiB annotation limit (invalid CRD error).
+kubectl apply -n argocd --server-side --force-conflicts \
+  --field-manager=autocare-bootstrap \
   -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
 
 echo "  Waiting for ArgoCD server to be ready..."
