@@ -7,9 +7,11 @@
 # Usage:
 #   export CLUSTER_NAME=autocare-eks
 #   export AWS_REGION=us-west-2
-#   export DB_PASSWORD=your-db-password
-#   export JWT_SECRET=your-jwt-secret
 #   ./autocare-infra/scripts/02-bootstrap-cluster.sh
+#
+# DB_PASSWORD / JWT_SECRET are optional:
+#   - If unset: read current values from Secrets Manager (secrets must exist — run terraform apply first).
+#   - If set:   those values are written to Secrets Manager in step 7 (override / rotation).
 
 set -euo pipefail
 
@@ -18,16 +20,40 @@ AWS_REGION="${AWS_REGION:-us-west-2}"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 
-# Validate required env vars
-if [[ -z "${DB_PASSWORD:-}" ]]; then
-  echo "✗ DB_PASSWORD env var is required"
-  echo "  export DB_PASSWORD=your-db-password"
-  exit 1
-fi
+JWT_SECRET_OVERRIDDEN=false
+DB_PASSWORD_OVERRIDDEN=false
+
+get_secret_string() {
+  local secret_id=$1
+  aws secretsmanager get-secret-value \
+    --secret-id "$secret_id" \
+    --region "$AWS_REGION" \
+    --query SecretString \
+    --output text
+}
+
 if [[ -z "${JWT_SECRET:-}" ]]; then
-  echo "✗ JWT_SECRET env var is required"
-  echo "  export JWT_SECRET=your-jwt-secret"
-  exit 1
+  echo "▶ JWT_SECRET unset — reading from Secrets Manager (autocare/jwt-secret)"
+  if ! JWT_SECRET=$(get_secret_string autocare/jwt-secret); then
+    echo "✗ Could not read autocare/jwt-secret"
+    echo "  Run: cd autocare-infra/infra && terraform apply"
+    echo "  Or: export JWT_SECRET=... and re-run"
+    exit 1
+  fi
+else
+  JWT_SECRET_OVERRIDDEN=true
+fi
+
+if [[ -z "${DB_PASSWORD:-}" ]]; then
+  echo "▶ DB_PASSWORD unset — reading from Secrets Manager (autocare/db-password)"
+  if ! DB_PASSWORD=$(get_secret_string autocare/db-password); then
+    echo "✗ Could not read autocare/db-password"
+    echo "  Run: cd autocare-infra/infra && terraform apply"
+    echo "  Or: export DB_PASSWORD=... and re-run"
+    exit 1
+  fi
+else
+  DB_PASSWORD_OVERRIDDEN=true
 fi
 
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
@@ -172,9 +198,9 @@ kubectl rollout status daemonset/fluent-bit \
   echo "  ⚠ Fluent Bit rollout check timed out — verify manually"
 echo "  ✓ Fluent Bit installed"
 
-# ── 7. Populate AWS Secrets Manager ──────────────────────────────────────────
+# ── 7. Sync AWS Secrets Manager ───────────────────────────────────────────────
 echo ""
-echo "▶ Step 7/9 — Populate AWS Secrets Manager"
+echo "▶ Step 7/9 — Sync AWS Secrets Manager"
 
 # Get RDS endpoint from Terraform
 RDS_ENDPOINT=$(cd "$REPO_ROOT/autocare-infra/infra" && \
@@ -185,23 +211,31 @@ if [[ -z "$RDS_ENDPOINT" ]]; then
   read -rp "  RDS endpoint hostname: " RDS_ENDPOINT
 fi
 
-aws secretsmanager put-secret-value \
-  --secret-id autocare/jwt-secret \
-  --secret-string "$JWT_SECRET" \
-  --region "$AWS_REGION"
-echo "  ✓ autocare/jwt-secret updated"
+if [[ "$JWT_SECRET_OVERRIDDEN" == true ]]; then
+  aws secretsmanager put-secret-value \
+    --secret-id autocare/jwt-secret \
+    --secret-string "$JWT_SECRET" \
+    --region "$AWS_REGION"
+  echo "  ✓ autocare/jwt-secret updated (from JWT_SECRET env)"
+else
+  echo "  ○ autocare/jwt-secret unchanged (fetched from Secrets Manager; set JWT_SECRET to override)"
+fi
 
-aws secretsmanager put-secret-value \
-  --secret-id autocare/db-password \
-  --secret-string "$DB_PASSWORD" \
-  --region "$AWS_REGION"
-echo "  ✓ autocare/db-password updated"
+if [[ "$DB_PASSWORD_OVERRIDDEN" == true ]]; then
+  aws secretsmanager put-secret-value \
+    --secret-id autocare/db-password \
+    --secret-string "$DB_PASSWORD" \
+    --region "$AWS_REGION"
+  echo "  ✓ autocare/db-password updated (from DB_PASSWORD env)"
+else
+  echo "  ○ autocare/db-password unchanged (fetched from Secrets Manager; set DB_PASSWORD to override)"
+fi
 
 aws secretsmanager put-secret-value \
   --secret-id autocare/rds-endpoint \
   --secret-string "$RDS_ENDPOINT" \
   --region "$AWS_REGION"
-echo "  ✓ autocare/rds-endpoint updated"
+echo "  ✓ autocare/rds-endpoint updated (from Terraform output)"
 
 # ── 8. Apply ArgoCD Application CRD ──────────────────────────────────────────
 echo ""
