@@ -49,7 +49,10 @@ Create the `argocd` namespace and install ArgoCD using the official stable manif
 
 ```bash
 kubectl create namespace argocd
-kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
+# Use server-side apply: client-side apply can fail on the ApplicationSet CRD (annotation size limit).
+kubectl apply -n argocd --server-side --force-conflicts \
+  --field-manager=autocare-bootstrap \
+  -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
 ```
 
 ---
