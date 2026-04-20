@@ -24,7 +24,7 @@ spec:
       serviceAccountName: autocare-sa
       containers:
         - name: vehicle-maintenance-ui
-          image: 626635446574.dkr.ecr.us-west-2.amazonaws.com/autocare/vehicle-maintenance-ui:cedf01d5f398a952652dc9ee09ab2e8f7e868bfc
+          image: 626635446574.dkr.ecr.us-west-2.amazonaws.com/autocare/vehicle-maintenance-ui:ff56f9777a34f02cec5080126c957ab716d2bbc0
           ports:
             - containerPort: 3000
           resources:
