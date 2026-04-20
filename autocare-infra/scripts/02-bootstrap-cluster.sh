@@ -85,6 +85,12 @@ kubectl apply -n argocd --server-side --force-conflicts \
   --field-manager=autocare-bootstrap \
   -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
 
+# Separate AWS ALB (Ingress in Git: k8s/argocd/alb/) targets Service argocd-server:80 over HTTP; server must not require TLS on the pod.
+echo "  Enabling HTTP for argocd-server (plain HTTP to port 80 for AWS ALB Ingress)..."
+kubectl patch configmap argocd-cmd-params-cm -n argocd --context "$CLUSTER_NAME" --type merge \
+  -p '{"data":{"server.insecure":"true"}}'
+kubectl rollout restart deployment/argocd-server -n argocd --context "$CLUSTER_NAME"
+
 echo "  Waiting for ArgoCD server to be ready (image pulls + scheduling can exceed 3m on small clusters)..."
 if ! kubectl wait --for=condition=available deployment/argocd-server \
   --context "$CLUSTER_NAME" \
@@ -346,9 +352,12 @@ echo ""
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo "  ✓ Bootstrap complete"
 echo ""
-echo "  ArgoCD UI (port-forward to access locally):"
-echo "  kubectl port-forward svc/argocd-server -n argocd 8888:443"
-echo "  Open: https://localhost:8888  (admin / $ARGOCD_PASSWORD)"
+echo "  ArgoCD UI — separate ALB (after Argo syncs k8s/argocd/alb/argocd-server-alb-ingress.yaml):"
+echo "  kubectl get ingress argocd-server-alb -n argocd --context $CLUSTER_NAME -o jsonpath='{.status.loadBalancer.ingress[0].hostname}{\"\\n\"}'"
+echo "  Open: http://<alb-hostname>/  (admin / password shown above)"
+echo "  ArgoCD UI — local port-forward (no ALB):"
+echo "  kubectl port-forward svc/argocd-server -n argocd --context $CLUSTER_NAME 8888:80"
+echo "  Open: http://localhost:8888/  (admin / $ARGOCD_PASSWORD)"
 echo ""
 echo "  Next steps:"
 echo "  1. Configure GitHub secrets (see autocare-infra/REVIEW.md)"

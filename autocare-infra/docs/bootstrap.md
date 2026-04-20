@@ -78,6 +78,18 @@ kubectl apply -f autocare-infra/k8s/argocd/autocare-app.yaml
 
 ArgoCD will immediately begin syncing all manifests under `k8s/` to the cluster. From this point on, every `git push` that updates `k8s/` will trigger an automatic sync.
 
+#### Argo CD UI on a separate ALB
+
+The repo includes `autocare-infra/k8s/argocd/alb/argocd-server-alb-ingress.yaml`, which creates a **second** internet-facing ALB (the app uses `k8s/ingress/autocare-ingress.yaml` in namespace `autocare`). That Ingress stays in namespace `argocd` and targets `Service/argocd-server` port **80**. `02-bootstrap-cluster.sh` sets `server.insecure: "true"` in `argocd-cmd-params-cm` so the API server speaks **HTTP** on that port (required for a plain HTTP listener).
+
+After sync, wait for the AWS Load Balancer Controller to set the hostname, then open the UI:
+
+```bash
+kubectl get ingress argocd-server-alb -n argocd -o jsonpath='{.status.loadBalancer.ingress[0].hostname}{"\n"}'
+```
+
+Use `http://<hostname>/` and log in as `admin` with the password from `argocd-initial-admin-secret`. For **HTTPS** and full **gRPC** support on ALB, add an ACM certificate annotation and follow the [Argo CD AWS ALB ingress section](https://argo-cd.readthedocs.io/en/stable/operator-manual/ingress/#aws-application-load-balancers-albs-ingress).
+
 ---
 
 ### 5. Install External Secrets Operator

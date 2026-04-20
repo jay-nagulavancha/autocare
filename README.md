@@ -154,16 +154,26 @@ auto_shutdown_idle_minutes = 30
 
 ### Access ArgoCD UI
 
+After bootstrap, Argo CD serves **HTTP** on service port **80** (`server.insecure` is set in `argocd-cmd-params-cm`). A **separate** ALB is created by `autocare-infra/k8s/argocd/alb/argocd-server-alb-ingress.yaml` once Argo has synced it:
+
 ```bash
-# Port-forward
-kubectl port-forward svc/argocd-server -n argocd 8080:443
+# Separate ALB hostname (namespace argocd)
+kubectl get ingress argocd-server-alb -n argocd \
+  -o jsonpath='{.status.loadBalancer.ingress[0].hostname}{"\n"}'
+```
+
+Open `http://<hostname>/` — login with `admin` and the password from the secret below.
+
+```bash
+# Port-forward (local)
+kubectl port-forward svc/argocd-server -n argocd 8080:80
 
 # Get admin password
 kubectl -n argocd get secret argocd-initial-admin-secret \
   -o jsonpath="{.data.password}" | base64 -d && echo
 ```
 
-Open `https://localhost:8080` — login with `admin` and the password above.
+Open `http://localhost:8080/` with `admin` and that password.
 
 ### Access the UI
 
