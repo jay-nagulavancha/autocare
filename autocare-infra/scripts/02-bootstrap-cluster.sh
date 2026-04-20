@@ -103,12 +103,66 @@ echo "▶ Step 3/9 — Install External Secrets Operator"
 helm repo add external-secrets https://charts.external-secrets.io 2>/dev/null || true
 helm repo update
 
-echo "  (Helm --wait can take several minutes on a new cluster: image pull + webhook/cert pods.)"
+ESO_NS=external-secrets
+ESO_DEPLOYS=(external-secrets external-secrets-webhook external-secrets-cert-controller)
+
+# Helm --wait treats Deployments as failed when Kubernetes marks ProgressDeadlineExceeded
+# (default 600s). Slow pulls from ghcr.io on a single small node often exceed that, even if
+# pods would become healthy shortly after. Install without Helm --wait, extend the deadline,
+# then wait for rollouts (with one restart retry after a prior failed install).
+echo "  Installing chart (extended Deployment progress deadline + kubectl rollout wait)..."
 helm upgrade --install external-secrets external-secrets/external-secrets \
-  --namespace external-secrets \
+  --namespace "$ESO_NS" \
   --create-namespace \
-  --wait \
-  --timeout 10m
+  --timeout 15m
+
+echo "  Waiting for Deployments to exist..."
+seen=0
+for _ in $(seq 1 90); do
+  seen=0
+  for d in "${ESO_DEPLOYS[@]}"; do
+    if kubectl get deploy -n "$ESO_NS" "$d" &>/dev/null; then
+      seen=$((seen + 1))
+    fi
+  done
+  [[ "$seen" -eq 3 ]] && break
+  sleep 2
+done
+if [[ "$seen" -ne 3 ]]; then
+  echo "  ✗ External Secrets Deployments did not appear within ~3m."
+  kubectl get pods,deploy -n "$ESO_NS" 2>/dev/null || true
+  exit 1
+fi
+
+echo "  Patching progressDeadlineSeconds=1800 (default 600s is tight for cold image pulls)..."
+for d in "${ESO_DEPLOYS[@]}"; do
+  kubectl patch deployment "$d" -n "$ESO_NS" \
+    -p '{"spec":{"progressDeadlineSeconds":1800}}' --type=merge
+done
+
+wait_eso_parallel() {
+  local timeout=$1
+  local pids=()
+  for d in "${ESO_DEPLOYS[@]}"; do
+    kubectl rollout status "deployment/$d" -n "$ESO_NS" --timeout="$timeout" &
+    pids+=("$!")
+  done
+  local ok=0
+  for pid in "${pids[@]}"; do
+    if wait "$pid"; then
+      ok=$((ok + 1))
+    fi
+  done
+  [[ "$ok" -eq "${#ESO_DEPLOYS[@]}" ]]
+}
+
+if ! wait_eso_parallel 25m; then
+  echo "  ⚠ Rollout not healthy; restarting Deployments once (often clears a stuck state after timeout)..."
+  for d in "${ESO_DEPLOYS[@]}"; do
+    kubectl rollout restart "deployment/$d" -n "$ESO_NS" || true
+  done
+  wait_eso_parallel 25m
+fi
 echo "  ✓ External Secrets Operator installed"
 
 # ── 4. Install AWS Load Balancer Controller ───────────────────────────────────

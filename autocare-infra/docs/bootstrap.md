@@ -83,23 +83,28 @@ ArgoCD will immediately begin syncing all manifests under `k8s/` to the cluster.
 
 The External Secrets Operator bridges AWS Secrets Manager and Kubernetes Secrets:
 
+Helm’s `--wait` alone is brittle here: Kubernetes defaults `progressDeadlineSeconds` to **600s**, so slow image pulls (e.g. `ghcr.io` on a single small node) can mark the Deployments **Failed** even when pods would become ready shortly after. Prefer install **without** Helm `--wait`, raise the deadline, then wait for rollouts:
+
 ```bash
 helm repo add external-secrets https://charts.external-secrets.io
 helm repo update
 helm upgrade --install external-secrets external-secrets/external-secrets \
   -n external-secrets \
   --create-namespace \
-  --wait \
-  --timeout 10m
+  --timeout 15m
+
+for d in external-secrets external-secrets-webhook external-secrets-cert-controller; do
+  kubectl patch deployment "$d" -n external-secrets \
+    -p '{"spec":{"progressDeadlineSeconds":1800}}' --type=merge
+done
+
+kubectl rollout status deployment/external-secrets -n external-secrets --timeout=25m &
+kubectl rollout status deployment/external-secrets-webhook -n external-secrets --timeout=25m &
+kubectl rollout status deployment/external-secrets-cert-controller -n external-secrets --timeout=25m &
+wait
 ```
 
-If you installed without `--wait`, wait for the operator (all three deployments may need a few minutes on first pull):
-
-```bash
-kubectl wait --for=condition=available deployment/external-secrets -n external-secrets --timeout=600s
-kubectl wait --for=condition=available deployment/external-secrets-webhook -n external-secrets --timeout=600s
-kubectl wait --for=condition=available deployment/external-secrets-cert-controller -n external-secrets --timeout=600s
-```
+If a prior attempt left Deployments stuck, run `kubectl rollout restart deployment/<name> -n external-secrets` for each, then the `rollout status` lines again.
 
 ---
 
