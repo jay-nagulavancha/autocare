@@ -243,13 +243,15 @@ kubectl create namespace amazon-cloudwatch --dry-run=client -o yaml | kubectl ap
 CW_FLUENT_URL="https://raw.githubusercontent.com/aws-samples/amazon-cloudwatch-container-insights/latest/k8s-deployment-manifest-templates/deployment-mode/daemonset/container-insights-monitoring/quickstart/cwagent-fluent-bit-quickstart.yaml"
 FB_MANIFEST=$(mktemp)
 trap 'rm -f "${FB_MANIFEST:-}"' EXIT
+# ConfigMap .data values must be strings. YAML 1.1 parses bare On/Off as booleans and
+# 2020 as an int, which makes kubectl apply fail with "unrecognized type: string".
 curl -fsSL "$CW_FLUENT_URL" | sed \
   -e "s/{{cluster_name}}/${CLUSTER_NAME}/g" \
   -e "s/{{region_name}}/${AWS_REGION}/g" \
-  -e "s/{{http_server_toggle}}/On/g" \
-  -e "s/{{http_server_port}}/2020/g" \
-  -e "s/{{read_from_head}}/Off/g" \
-  -e "s/{{read_from_tail}}/On/g" \
+  -e 's/{{http_server_toggle}}/"On"/g' \
+  -e 's/{{http_server_port}}/"2020"/g' \
+  -e 's/{{read_from_head}}/"Off"/g' \
+  -e 's/{{read_from_tail}}/"On"/g' \
   >"$FB_MANIFEST"
 
 kubectl apply --context "$CLUSTER_NAME" -f "$FB_MANIFEST"
