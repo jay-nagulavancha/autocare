@@ -4,6 +4,7 @@ metadata:
   name: vehicle-maintenance-ui-config
   namespace: autocare
 data:
-  # Use relative paths so ALB DNS rotations do not require config updates.
-  VITE_AUTH_API_URL: "/api/auth"
-  VITE_MAINTENANCE_API_URL: "/api/v1"
+  # UI clients already call /api/auth/* and /api/v1/* paths. Keep base URL empty
+  # so requests stay same-origin while avoiding duplicated path prefixes.
+  VITE_AUTH_API_URL: ""
+  VITE_MAINTENANCE_API_URL: ""
