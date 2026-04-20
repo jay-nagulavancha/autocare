@@ -19,7 +19,9 @@ auto_shutdown_idle_minutes = 30
 # VPC already uses a single NAT gateway. EKS API still needs two subnets/AZs; workers can stay in one AZ.
 eks_single_az_nodes       = true
 eks_node_instance_types   = ["t3.small"]
-eks_node_desired_size     = 1
+# Avoid desired_size = 1 on t3.small: EKS max-pods-per-node (~11) is quickly exceeded by
+# kube-system DaemonSets + Argo CD + External Secrets + app pods → FailedScheduling "Too many pods".
+eks_node_desired_size     = 2
 eks_node_min_size         = 1
 eks_node_max_size         = 3
 rds_multi_az              = false
