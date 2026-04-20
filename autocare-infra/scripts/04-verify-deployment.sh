@@ -128,6 +128,8 @@ else
   echo ""
   echo "  Fluent Bit: re-run bootstrap step 6 (curl | sed placeholders | kubectl apply) or full 02-bootstrap-cluster.sh."
   echo ""
+  echo "  Pending pods: kubectl describe pod -n autocare <name> — common causes: Insufficient cpu/memory, Too many pods (EKS per-node limit), or missing secrets."
+  echo ""
   echo "  Useful debug commands (add --context $CLUSTER_NAME):"
   echo "  kubectl describe pods -n autocare"
   echo "  kubectl logs -n autocare -l app=user-auth-service --tail=50"
