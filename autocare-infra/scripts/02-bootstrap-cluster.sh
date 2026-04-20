@@ -77,20 +77,29 @@ kubectl cluster-info --context "$CLUSTER_NAME"
 # ── 2. Install ArgoCD ─────────────────────────────────────────────────────────
 echo ""
 echo "▶ Step 2/9 — Install ArgoCD"
-kubectl create namespace argocd --dry-run=client -o yaml | kubectl apply -f -
+kubectl create namespace argocd --dry-run=client -o yaml | kubectl apply --context "$CLUSTER_NAME" -f -
 # Server-side apply: client-side apply stores last-applied-configuration on each object;
 # the ApplicationSet CRD exceeds the 256KiB annotation limit (invalid CRD error).
 kubectl apply -n argocd --server-side --force-conflicts \
+  --context "$CLUSTER_NAME" \
   --field-manager=autocare-bootstrap \
   -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
 
-echo "  Waiting for ArgoCD server to be ready..."
-kubectl wait --for=condition=available deployment/argocd-server \
-  -n argocd --timeout=180s
+echo "  Waiting for ArgoCD server to be ready (image pulls + scheduling can exceed 3m on small clusters)..."
+if ! kubectl wait --for=condition=available deployment/argocd-server \
+  --context "$CLUSTER_NAME" \
+  -n argocd --timeout=15m; then
+  echo "  ✗ argocd-server did not become Available in time."
+  kubectl get pods -n argocd -o wide --context "$CLUSTER_NAME" 2>/dev/null || true
+  kubectl describe deployment argocd-server -n argocd --context "$CLUSTER_NAME" 2>/dev/null | tail -60 || true
+  echo "  Common causes: insufficient cpu/memory or max pods on nodes; ImagePullBackOff; or a CNI policy blocking probes."
+  exit 1
+fi
 echo "  ✓ ArgoCD installed"
 
 # Print initial admin password
 ARGOCD_PASSWORD=$(kubectl -n argocd get secret argocd-initial-admin-secret \
+  --context "$CLUSTER_NAME" \
   -o jsonpath="{.data.password}" | base64 -d)
 echo ""
 echo "  ArgoCD admin password: $ARGOCD_PASSWORD"

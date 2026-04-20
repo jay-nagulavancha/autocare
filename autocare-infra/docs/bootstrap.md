@@ -50,6 +50,7 @@ Create the `argocd` namespace and install ArgoCD using the official stable manif
 ```bash
 kubectl create namespace argocd
 # Use server-side apply: client-side apply can fail on the ApplicationSet CRD (annotation size limit).
+# With multiple kube contexts, add --context <your-eks-context> to each kubectl command (02-bootstrap-cluster.sh does this via CLUSTER_NAME).
 kubectl apply -n argocd --server-side --force-conflicts \
   --field-manager=autocare-bootstrap \
   -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
@@ -62,7 +63,7 @@ kubectl apply -n argocd --server-side --force-conflicts \
 Wait until the ArgoCD server deployment is available before proceeding:
 
 ```bash
-kubectl wait --for=condition=available deployment/argocd-server -n argocd --timeout=120s
+kubectl wait --for=condition=available deployment/argocd-server -n argocd --timeout=15m
 ```
 
 ---
