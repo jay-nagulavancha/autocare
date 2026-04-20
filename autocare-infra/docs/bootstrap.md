@@ -148,16 +148,26 @@ kubectl get deployment metrics-server -n kube-system
 
 Fluent Bit ships container logs to the CloudWatch log groups provisioned by Terraform.
 
-```bash
-ClusterName=<CLUSTER_NAME>
-RegionName=<AWS_REGION>
-FluentBitHttpPort='2020'
-FluentBitReadFromHead='Off'
+The upstream quickstart manifest contains placeholders (`{{cluster_name}}`, `{{region_name}}`, …). **Do not** `kubectl apply` the raw URL without replacing them, or the CloudWatch agent config and Fluent Bit `ConfigMap` stay invalid.
 
-kubectl apply -f https://raw.githubusercontent.com/aws-samples/amazon-cloudwatch-container-insights/latest/k8s-deployment-manifest-templates/deployment-mode/daemonset/container-insights-monitoring/quickstart/cwagent-fluent-bit-quickstart.yaml
+```bash
+kubectl create namespace amazon-cloudwatch --dry-run=client -o yaml | kubectl apply -f -
+
+CW_FLUENT_URL="https://raw.githubusercontent.com/aws-samples/amazon-cloudwatch-container-insights/latest/k8s-deployment-manifest-templates/deployment-mode/daemonset/container-insights-monitoring/quickstart/cwagent-fluent-bit-quickstart.yaml"
+FB_MANIFEST=$(mktemp)
+curl -fsSL "$CW_FLUENT_URL" | sed \
+  -e "s/{{cluster_name}}/${CLUSTER_NAME}/g" \
+  -e "s/{{region_name}}/${AWS_REGION}/g" \
+  -e "s/{{http_server_toggle}}/On/g" \
+  -e "s/{{http_server_port}}/2020/g" \
+  -e "s/{{read_from_head}}/Off/g" \
+  -e "s/{{read_from_tail}}/On/g" \
+  >"$FB_MANIFEST"
+kubectl apply -f "$FB_MANIFEST"
+rm -f "$FB_MANIFEST"
 ```
 
-Set the required environment variables in the DaemonSet config map to match your cluster name and region. Refer to the [CloudWatch Container Insights documentation](https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/Container-Insights-setup-EKS-quickstart.html) for full configuration details.
+Refer to the [CloudWatch Container Insights EKS quickstart](https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/Container-Insights-setup-EKS-quickstart.html) for details.
 
 ---
 

@@ -235,24 +235,31 @@ echo "  ✓ Metrics Server installed"
 echo ""
 echo "▶ Step 6/9 — Install Fluent Bit for CloudWatch"
 
-# Create the CloudWatch namespace and ConfigMap
+# Upstream quickstart YAML contains {{cluster_name}}, {{region_name}}, etc. Applying it
+# without substitution leaves invalid cwagent JSON / ConfigMaps and often no healthy
+# fluent-bit DaemonSet (verify script expects DS fluent-bit in amazon-cloudwatch).
 kubectl create namespace amazon-cloudwatch --dry-run=client -o yaml | kubectl apply -f -
 
-kubectl create configmap fluent-bit-cluster-info \
-  --from-literal=cluster.name="$CLUSTER_NAME" \
-  --from-literal=http.server=On \
-  --from-literal=http.port=2020 \
-  --from-literal=read.head=Off \
-  --from-literal=read.tail=On \
-  --from-literal=logs.region="$AWS_REGION" \
-  -n amazon-cloudwatch \
-  --dry-run=client -o yaml | kubectl apply -f -
+CW_FLUENT_URL="https://raw.githubusercontent.com/aws-samples/amazon-cloudwatch-container-insights/latest/k8s-deployment-manifest-templates/deployment-mode/daemonset/container-insights-monitoring/quickstart/cwagent-fluent-bit-quickstart.yaml"
+FB_MANIFEST=$(mktemp)
+trap 'rm -f "${FB_MANIFEST:-}"' EXIT
+curl -fsSL "$CW_FLUENT_URL" | sed \
+  -e "s/{{cluster_name}}/${CLUSTER_NAME}/g" \
+  -e "s/{{region_name}}/${AWS_REGION}/g" \
+  -e "s/{{http_server_toggle}}/On/g" \
+  -e "s/{{http_server_port}}/2020/g" \
+  -e "s/{{read_from_head}}/Off/g" \
+  -e "s/{{read_from_tail}}/On/g" \
+  >"$FB_MANIFEST"
 
-kubectl apply -f https://raw.githubusercontent.com/aws-samples/amazon-cloudwatch-container-insights/latest/k8s-deployment-manifest-templates/deployment-mode/daemonset/container-insights-monitoring/quickstart/cwagent-fluent-bit-quickstart.yaml
+kubectl apply --context "$CLUSTER_NAME" -f "$FB_MANIFEST"
+rm -f "$FB_MANIFEST"
+trap - EXIT
 
 echo "  Waiting for Fluent Bit DaemonSet..."
 kubectl rollout status daemonset/fluent-bit \
-  -n amazon-cloudwatch --timeout=120s 2>/dev/null || \
+  --context "$CLUSTER_NAME" \
+  -n amazon-cloudwatch --timeout=180s 2>/dev/null || \
   echo "  ⚠ Fluent Bit rollout check timed out — verify manually"
 echo "  ✓ Fluent Bit installed"
 
