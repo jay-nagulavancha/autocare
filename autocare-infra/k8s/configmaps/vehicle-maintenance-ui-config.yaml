@@ -4,7 +4,7 @@ metadata:
   name: vehicle-maintenance-ui-config
   namespace: autocare
 data:
-  # UI clients already call /api/auth/* and /api/v1/* paths. Keep base URL empty
-  # so requests stay same-origin while avoiding duplicated path prefixes.
-  VITE_AUTH_API_URL: ""
-  VITE_MAINTENANCE_API_URL: ""
+  # UI clients already call /api/auth/* and /api/v1/* paths.
+  # Use "/" as origin-root base to avoid duplicated prefixes from image defaults.
+  VITE_AUTH_API_URL: "/"
+  VITE_MAINTENANCE_API_URL: "/"
