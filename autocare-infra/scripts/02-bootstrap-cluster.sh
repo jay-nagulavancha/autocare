@@ -64,7 +64,7 @@ echo "━━━━━━━━━━━━━━━━━━━━━━━━�
 
 # ── 1. Configure kubectl ──────────────────────────────────────────────────────
 echo ""
-echo "▶ Step 1/9 — Configure kubectl"
+echo "▶ Step 1/10 — Configure kubectl"
 aws eks update-kubeconfig \
   --name "$CLUSTER_NAME" \
   --region "$AWS_REGION" \
@@ -76,7 +76,7 @@ kubectl cluster-info --context "$CLUSTER_NAME"
 
 # ── 2. Install ArgoCD ─────────────────────────────────────────────────────────
 echo ""
-echo "▶ Step 2/9 — Install ArgoCD"
+echo "▶ Step 2/10 — Install ArgoCD"
 kubectl create namespace argocd --dry-run=client -o yaml | kubectl apply --context "$CLUSTER_NAME" -f -
 # Server-side apply: client-side apply stores last-applied-configuration on each object;
 # the ApplicationSet CRD exceeds the 256KiB annotation limit (invalid CRD error).
@@ -114,7 +114,7 @@ echo ""
 
 # ── 3. Install External Secrets Operator ─────────────────────────────────────
 echo ""
-echo "▶ Step 3/9 — Install External Secrets Operator"
+echo "▶ Step 3/10 — Install External Secrets Operator"
 helm repo add external-secrets https://charts.external-secrets.io 2>/dev/null || true
 helm repo update
 
@@ -182,7 +182,7 @@ echo "  ✓ External Secrets Operator installed"
 
 # ── 4. Install AWS Load Balancer Controller ───────────────────────────────────
 echo ""
-echo "▶ Step 4/9 — Install AWS Load Balancer Controller"
+echo "▶ Step 4/10 — Install AWS Load Balancer Controller"
 
 # Get the LBC IAM role ARN and VPC ID from Terraform outputs
 LBC_ROLE_ARN=$(cd "$REPO_ROOT/autocare-infra/infra" && \
@@ -237,7 +237,7 @@ fi
 
 # ── 5. Install Metrics Server ─────────────────────────────────────────────────
 echo ""
-echo "▶ Step 5/9 — Install Metrics Server"
+echo "▶ Step 5/10 — Install Metrics Server"
 kubectl apply -f \
   https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml
 
@@ -248,7 +248,7 @@ echo "  ✓ Metrics Server installed"
 
 # ── 6. Install Fluent Bit (CloudWatch Container Insights) ────────────────────
 echo ""
-echo "▶ Step 6/9 — Install Fluent Bit for CloudWatch"
+echo "▶ Step 6/10 — Install Fluent Bit for CloudWatch"
 
 # Upstream quickstart YAML contains {{cluster_name}}, {{region_name}}, etc. Applying it
 # without substitution leaves invalid cwagent JSON / ConfigMaps and often no healthy
@@ -282,7 +282,7 @@ echo "  ✓ Fluent Bit installed"
 
 # ── 7. Sync AWS Secrets Manager ───────────────────────────────────────────────
 echo ""
-echo "▶ Step 7/9 — Sync AWS Secrets Manager"
+echo "▶ Step 7/10 — Sync AWS Secrets Manager"
 
 # Get RDS endpoint from Terraform
 RDS_ENDPOINT=$(cd "$REPO_ROOT/autocare-infra/infra" && \
@@ -319,16 +319,97 @@ aws secretsmanager put-secret-value \
   --region "$AWS_REGION"
 echo "  ✓ autocare/rds-endpoint updated (from Terraform output)"
 
-# ── 8. Apply ArgoCD Application CRD ──────────────────────────────────────────
+# ── 8. Bootstrap application databases (auth_db, maintenance_db) ─────────────
 echo ""
-echo "▶ Step 8/9 — Apply ArgoCD Application CRD"
+echo "▶ Step 8/10 — Bootstrap MySQL schemas"
+
+RDS_STATUS=$(aws rds describe-db-instances \
+  --region "$AWS_REGION" \
+  --query "DBInstances[?Endpoint.Address=='$RDS_ENDPOINT'].DBInstanceStatus | [0]" \
+  --output text 2>/dev/null || echo "unknown")
+
+if [[ "$RDS_STATUS" == "stopped" ]]; then
+  RDS_IDENTIFIER=$(aws rds describe-db-instances \
+    --region "$AWS_REGION" \
+    --query "DBInstances[?Endpoint.Address=='$RDS_ENDPOINT'].DBInstanceIdentifier | [0]" \
+    --output text 2>/dev/null || echo "")
+  if [[ -n "$RDS_IDENTIFIER" && "$RDS_IDENTIFIER" != "None" ]]; then
+    echo "  RDS is stopped — starting $RDS_IDENTIFIER..."
+    aws rds start-db-instance --db-instance-identifier "$RDS_IDENTIFIER" --region "$AWS_REGION" >/dev/null
+    aws rds wait db-instance-available --db-instance-identifier "$RDS_IDENTIFIER" --region "$AWS_REGION"
+  else
+    echo "  ⚠ Could not resolve RDS identifier from endpoint. Ensure DB is running before app startup."
+  fi
+fi
+
+kubectl create namespace autocare --dry-run=client -o yaml | kubectl apply --context "$CLUSTER_NAME" -f -
+
+kubectl create configmap db-bootstrap-sql \
+  --from-file=user-auth-init.sql="$REPO_ROOT/autocare/db/user-auth-service/init.sql" \
+  --from-file=vehicle-maintenance-init.sql="$REPO_ROOT/autocare/db/vehicle-maintenance-service/init.sql" \
+  -n autocare \
+  --dry-run=client -o yaml | kubectl apply --context "$CLUSTER_NAME" -f -
+
+DB_BOOTSTRAP_FILE=$(mktemp)
+trap 'rm -f "${DB_BOOTSTRAP_FILE:-}"' EXIT
+cat >"$DB_BOOTSTRAP_FILE" <<EOF
+apiVersion: v1
+kind: Pod
+metadata:
+  name: db-bootstrap
+  namespace: autocare
+spec:
+  restartPolicy: Never
+  containers:
+    - name: mysql
+      image: mysql:8
+      command: ["sh", "-c"]
+      args:
+        - |
+          mysql -h "$RDS_ENDPOINT" -u root -p"$DB_PASSWORD" < /sql/user-auth-init.sql
+          mysql -h "$RDS_ENDPOINT" -u root -p"$DB_PASSWORD" < /sql/vehicle-maintenance-init.sql
+      resources:
+        requests:
+          cpu: "50m"
+          memory: "128Mi"
+        limits:
+          cpu: "100m"
+          memory: "256Mi"
+      volumeMounts:
+        - name: sql
+          mountPath: /sql
+          readOnly: true
+  volumes:
+    - name: sql
+      configMap:
+        name: db-bootstrap-sql
+EOF
+
+kubectl delete pod db-bootstrap -n autocare --context "$CLUSTER_NAME" --ignore-not-found >/dev/null 2>&1 || true
+kubectl apply --context "$CLUSTER_NAME" -f "$DB_BOOTSTRAP_FILE"
+if kubectl wait --for=jsonpath='{.status.phase}'=Succeeded pod/db-bootstrap -n autocare --context "$CLUSTER_NAME" --timeout=180s; then
+  echo "  ✓ Databases ensured: auth_db, maintenance_db"
+else
+  echo "  ✗ DB bootstrap pod did not complete successfully"
+  kubectl logs pod/db-bootstrap -n autocare --context "$CLUSTER_NAME" || true
+  kubectl describe pod db-bootstrap -n autocare --context "$CLUSTER_NAME" || true
+  exit 1
+fi
+kubectl delete pod db-bootstrap -n autocare --context "$CLUSTER_NAME" --ignore-not-found >/dev/null 2>&1 || true
+kubectl delete configmap db-bootstrap-sql -n autocare --context "$CLUSTER_NAME" --ignore-not-found >/dev/null 2>&1 || true
+rm -f "$DB_BOOTSTRAP_FILE"
+trap - EXIT
+
+# ── 9. Apply ArgoCD Application CRD ──────────────────────────────────────────
+echo ""
+echo "▶ Step 9/10 — Apply ArgoCD Application CRD"
 kubectl apply -f "$REPO_ROOT/autocare-infra/k8s/argocd/autocare-app.yaml"
 echo "  ✓ ArgoCD Application registered"
 echo "  ArgoCD will now sync k8s/ manifests to the autocare namespace"
 
-# ── 9. Verify ─────────────────────────────────────────────────────────────────
+# ── 10. Verify ────────────────────────────────────────────────────────────────
 echo ""
-echo "▶ Step 9/9 — Verification"
+echo "▶ Step 10/10 — Verification"
 echo ""
 echo "  Cluster info:"
 kubectl cluster-info --context "$CLUSTER_NAME"
