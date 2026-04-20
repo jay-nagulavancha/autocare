@@ -61,13 +61,13 @@ variable "eks_single_az_nodes" {
 }
 
 variable "eks_node_instance_types" {
-  description = "EKS managed node group instance types (e.g. t3.small for dev, t3.medium for more headroom)"
+  description = "EKS managed node group instance types. Smaller types have lower max-pods-per-node (VPC CNI); t3.small + a single node often cannot schedule Argo CD, External Secrets, and apps together."
   type        = list(string)
   default     = ["t3.medium"]
 }
 
 variable "eks_node_desired_size" {
-  description = "EKS node group desired size"
+  description = "EKS node group desired size. Use at least 2 for small instance dev clusters unless you use larger instances or VPC CNI prefix delegation; otherwise expect FailedScheduling: Too many pods."
   type        = number
   default     = 2
 }
