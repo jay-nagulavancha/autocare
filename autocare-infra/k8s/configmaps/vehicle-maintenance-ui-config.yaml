@@ -4,6 +4,6 @@ metadata:
   name: vehicle-maintenance-ui-config
   namespace: autocare
 data:
-  # Same origin as the UI: one ALB hostname; only path differs (/api/auth/*, /api/v1/*, /).
-  VITE_AUTH_API_URL: "http://k8s-autocare-autocare-45c48f487e-925119376.us-west-2.elb.amazonaws.com"
-  VITE_MAINTENANCE_API_URL: "http://k8s-autocare-autocare-45c48f487e-925119376.us-west-2.elb.amazonaws.com"
+  # Use relative paths so ALB DNS rotations do not require config updates.
+  VITE_AUTH_API_URL: "/api/auth"
+  VITE_MAINTENANCE_API_URL: "/api/v1"
