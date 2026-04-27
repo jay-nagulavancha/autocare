@@ -2,6 +2,7 @@ import { useState, type FormEvent } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { authClient } from '../api/authClient';
 import { useAuth } from '../context/AuthContext';
+import ServiceVersionsPanel from '../components/ServiceVersionsPanel';
 import type { MessageResponse, SignInResponse } from '../types';
 
 export default function RegisterPage() {
@@ -39,7 +40,8 @@ export default function RegisterPage() {
   };
 
   return (
-    <div style={{ maxWidth: 400, margin: '4rem auto', padding: '2rem', border: '1px solid #e2e8f0', borderRadius: 8 }}>
+    <div style={{ maxWidth: 520, margin: '4rem auto', padding: '0 1rem' }}>
+    <div style={{ maxWidth: 400, margin: '0 auto', padding: '2rem', border: '1px solid #e2e8f0', borderRadius: 8 }}>
       <h1 style={{ marginBottom: '1.5rem', fontSize: '1.5rem' }}>Register</h1>
       <form onSubmit={handleSubmit}>
         <div style={{ marginBottom: '1rem' }}>
@@ -91,6 +93,8 @@ export default function RegisterPage() {
       <p style={{ marginTop: '1rem', fontSize: '0.875rem' }}>
         Already have an account? <Link to="/login">Sign in</Link>
       </p>
+    </div>
+    <ServiceVersionsPanel />
     </div>
   );
 }

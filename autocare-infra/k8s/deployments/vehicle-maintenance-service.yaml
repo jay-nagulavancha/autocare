@@ -51,6 +51,11 @@ spec:
                 configMapKeyRef:
                   name: vehicle-maintenance-service-config
                   key: DB_USERNAME
+            - name: AUTOCARE_GIT_COMMIT
+              valueFrom:
+                configMapKeyRef:
+                  name: vehicle-maintenance-service-config
+                  key: AUTOCARE_GIT_COMMIT
             # Sensitive config from ExternalSecret-generated Secret
             - name: DB_HOST
               valueFrom:

@@ -22,6 +22,18 @@
       "name": "1. Auth - Register Admin",
       "event": [
         {
+          "listen": "prerequest",
+          "script": {
+            "exec": [
+              "const runId = Date.now().toString().slice(-8) + '_' + Math.floor(Math.random() * 1000).toString().padStart(3, '0');",
+              "const adminUsername = `admin_${runId}`;",
+              "pm.environment.set('RUN_ID', runId);",
+              "pm.environment.set('ADMIN_USERNAME', adminUsername);",
+              "pm.environment.set('ADMIN_EMAIL', `${adminUsername}@test.com`);"
+            ]
+          }
+        },
+        {
           "listen": "test",
           "script": {
             "exec": [
@@ -41,7 +53,7 @@
         ],
         "body": {
           "mode": "raw",
-          "raw": "{\"username\":\"admin_{{RUN_ID}}\",\"email\":\"admin_{{RUN_ID}}@test.com\",\"password\":\"Admin@123\",\"role\":[\"admin\"]}"
+          "raw": "{\"username\":\"{{ADMIN_USERNAME}}\",\"email\":\"{{ADMIN_EMAIL}}\",\"password\":\"Admin@123\",\"role\":[\"admin\"]}"
         },
         "url": {
           "raw": "{{AUTH_URL}}/api/auth/signup",
@@ -81,7 +93,7 @@
         ],
         "body": {
           "mode": "raw",
-          "raw": "{\"username\":\"admin_{{RUN_ID}}\",\"password\":\"Admin@123\"}"
+          "raw": "{\"username\":\"{{ADMIN_USERNAME}}\",\"password\":\"Admin@123\"}"
         },
         "url": {
           "raw": "{{AUTH_URL}}/api/auth/signin",
@@ -119,7 +131,7 @@
         ],
         "body": {
           "mode": "raw",
-          "raw": "{\"username\":\"admin_{{RUN_ID}}\",\"email\":\"other_{{RUN_ID}}@test.com\",\"password\":\"Admin@123\"}"
+          "raw": "{\"username\":\"{{ADMIN_USERNAME}}\",\"email\":\"other_{{RUN_ID}}@test.com\",\"password\":\"Admin@123\"}"
         },
         "url": {
           "raw": "{{AUTH_URL}}/api/auth/signup",
@@ -156,7 +168,7 @@
         ],
         "body": {
           "mode": "raw",
-          "raw": "{\"username\":\"admin_{{RUN_ID}}\",\"password\":\"Wrong\"}"
+          "raw": "{\"username\":\"{{ADMIN_USERNAME}}\",\"password\":\"Wrong\"}"
         },
         "url": {
           "raw": "{{AUTH_URL}}/api/auth/signin",
@@ -199,7 +211,7 @@
         ],
         "body": {
           "mode": "raw",
-          "raw": "{\"vin\":\"1HGBH41JX{{RUN_ID}}\",\"make\":\"Honda\",\"model\":\"Civic\",\"year\":2023,\"ownerUsername\":\"admin_{{RUN_ID}}\"}"
+          "raw": "{\"vin\":\"1HGBH41JX{{RUN_ID}}\",\"make\":\"Honda\",\"model\":\"Civic\",\"year\":2023,\"ownerUsername\":\"{{ADMIN_USERNAME}}\"}"
         },
         "url": {
           "raw": "{{MAINTENANCE_URL}}/api/v1/vehicles",

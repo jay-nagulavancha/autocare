@@ -56,6 +56,11 @@ spec:
                 configMapKeyRef:
                   name: user-auth-service-config
                   key: JWT_EXPIRATION_MS
+            - name: AUTOCARE_GIT_COMMIT
+              valueFrom:
+                configMapKeyRef:
+                  name: user-auth-service-config
+                  key: AUTOCARE_GIT_COMMIT
             # Sensitive config from ExternalSecret-generated Secret
             - name: DB_HOST
               valueFrom:

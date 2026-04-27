@@ -7,6 +7,8 @@ COPY src ./src
 RUN ./mvnw clean package -DskipTests -B
 
 FROM eclipse-temurin:17-jre-alpine
+ARG AUTOCARE_GIT_COMMIT=docker
+ENV AUTOCARE_GIT_COMMIT=$AUTOCARE_GIT_COMMIT
 WORKDIR /app
 COPY --from=build /app/target/*.jar app.jar
 EXPOSE 8080

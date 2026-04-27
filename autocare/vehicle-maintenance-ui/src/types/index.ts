@@ -152,3 +152,11 @@ export interface DashboardSummary {
   todaySchedules: ServiceSchedule[];
   bays: Bay[];
 }
+
+// ── Build / version (demo) ────────────────────────────────────────────────
+
+export interface ServiceVersionPayload {
+  service: string;
+  version: string;
+  gitCommit: string;
+}
