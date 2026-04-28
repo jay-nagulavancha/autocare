@@ -132,7 +132,8 @@ module "cloudwatch" {
 
 # ---------------------------------------------------------------------------
 # Auto-shutdown (dev/staging cost optimisation)
-# Disabled by default — set enable_auto_shutdown = true in terraform.tfvars
+# Enabled by default — set enable_auto_shutdown = false in terraform.tfvars
+# to disable for production-style HA.
 # ---------------------------------------------------------------------------
 
 module "auto_shutdown" {

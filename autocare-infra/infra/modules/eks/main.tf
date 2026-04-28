@@ -33,8 +33,15 @@ resource "aws_iam_role_policy_attachment" "cluster_policy" {
 
 resource "aws_eks_cluster" "this" {
   name     = var.cluster_name
-  version  = "1.30"
+  version  = "1.33"
   role_arn = aws_iam_role.cluster.arn
+
+  # Opt out of EKS Extended Support so AWS will not silently keep us on a
+  # version past its standard-support window (extended support is billed at
+  # ~$0.60/hour per cluster on top of the regular control-plane fee).
+  upgrade_policy {
+    support_type = "STANDARD"
+  }
 
   vpc_config {
     subnet_ids              = var.private_subnet_ids

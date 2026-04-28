@@ -41,7 +41,7 @@ variable "github_repo" {
 variable "enable_auto_shutdown" {
   description = "Enable Lambda-based auto-shutdown when no ALB traffic for idle_minutes. Recommended for dev/staging only."
   type        = bool
-  default     = false
+  default     = true
 }
 
 variable "auto_shutdown_idle_minutes" {

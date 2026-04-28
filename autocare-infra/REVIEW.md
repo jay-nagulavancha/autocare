@@ -22,7 +22,7 @@
 ### Infrastructure (Terraform)
 - ✅ VPC module — 2 public + 2 private subnets, IGW, NAT, route tables
 - ✅ ECR module — 3 repositories, immutable tags, scan on push, lifecycle policy (keep 30)
-- ✅ EKS module — cluster 1.29, OIDC provider, managed node group (t3.medium, 2-4 nodes)
+- ✅ EKS module — cluster 1.33 (STANDARD support, no auto-extended-support billing), OIDC provider, managed node group (t3.medium, 2-4 nodes)
 - ✅ RDS module — MySQL 8.0 Multi-AZ, private subnets, security group, 7-day backups
 - ✅ Secrets Manager module — JWT_SECRET, DB_PASSWORD, RDS_ENDPOINT
 - ✅ IAM module — IRSA role for autocare-sa, CI/CD role (ECR-only, no EKS permissions)
