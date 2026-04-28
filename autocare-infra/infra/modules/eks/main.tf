@@ -33,7 +33,7 @@ resource "aws_iam_role_policy_attachment" "cluster_policy" {
 
 resource "aws_eks_cluster" "this" {
   name     = var.cluster_name
-  version  = "1.34"
+  version  = "1.33"
   role_arn = aws_iam_role.cluster.arn
 
   # Opt out of EKS Extended Support so AWS will not silently keep us on a
