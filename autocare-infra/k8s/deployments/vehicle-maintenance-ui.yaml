@@ -7,7 +7,7 @@ metadata:
     app: vehicle-maintenance-ui
 spec:
   replicas: 1
-  revisionHistoryLimit: 3
+  revisionHistoryLimit: 4
   selector:
     matchLabels:
       app: vehicle-maintenance-ui

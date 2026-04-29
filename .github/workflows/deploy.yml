@@ -4,6 +4,13 @@ on:
   push:
     branches:
       - main
+  workflow_dispatch:
+    inputs:
+      deploy_all_services:
+        description: Build, push, and bump manifests for all three services (use after API path / contract changes)
+        required: false
+        default: false
+        type: boolean
 
 permissions:
   id-token: write   # required for OIDC
@@ -17,10 +24,10 @@ jobs:
     name: Detect changed paths
     runs-on: ubuntu-latest
     outputs:
-      auth: ${{ steps.filter.outputs.auth }}
-      maintenance: ${{ steps.filter.outputs.maintenance }}
-      ui: ${{ steps.filter.outputs.ui }}
-      any_service: ${{ steps.filter.outputs.any_service }}
+      auth: ${{ steps.resolve.outputs.auth }}
+      maintenance: ${{ steps.resolve.outputs.maintenance }}
+      ui: ${{ steps.resolve.outputs.ui }}
+      any_service: ${{ steps.resolve.outputs.any_service }}
 
     steps:
       - name: Checkout
@@ -44,9 +51,30 @@ jobs:
               - 'autocare/vehicle-maintenance-service/**'
               - 'autocare/vehicle-maintenance-ui/**'
 
+      - name: Resolve deploy scope (paths or manual full deploy)
+        id: resolve
+        shell: bash
+        run: |
+          # Manual "Deploy to EKS" with deploy_all_services bypasses path filtering so
+          # all backends + UI roll together (needed when only one folder changed in Git
+          # but every pod must pick up a shared API contract, e.g. /api/auth/version).
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ github.event.inputs.deploy_all_services }}" = "true" ]; then
+            echo "auth=true" >> "$GITHUB_OUTPUT"
+            echo "maintenance=true" >> "$GITHUB_OUTPUT"
+            echo "ui=true" >> "$GITHUB_OUTPUT"
+            echo "any_service=true" >> "$GITHUB_OUTPUT"
+            echo "Resolved: full deploy (manual override)"
+          else
+            echo "auth=${{ steps.filter.outputs.auth }}" >> "$GITHUB_OUTPUT"
+            echo "maintenance=${{ steps.filter.outputs.maintenance }}" >> "$GITHUB_OUTPUT"
+            echo "ui=${{ steps.filter.outputs.ui }}" >> "$GITHUB_OUTPUT"
+            echo "any_service=${{ steps.filter.outputs.any_service }}" >> "$GITHUB_OUTPUT"
+            echo "Resolved: path filter"
+          fi
+
       - name: Report
         run: |
-          echo "auth=${{ steps.filter.outputs.auth }} maintenance=${{ steps.filter.outputs.maintenance }} ui=${{ steps.filter.outputs.ui }} any_service=${{ steps.filter.outputs.any_service }}"
+          echo "auth=${{ steps.resolve.outputs.auth }} maintenance=${{ steps.resolve.outputs.maintenance }} ui=${{ steps.resolve.outputs.ui }} any_service=${{ steps.resolve.outputs.any_service }}"
 
   # ─────────────────────────────────────────────────────────────────
   # Job 1 — Test only affected services (skipped if nothing under autocare/*/ changed)

@@ -33,5 +33,6 @@ spec:
       - PrunePropagationPolicy=foreground
       - PruneLast=true
 
-  # How many past Git syncs Argo CD keeps in the UI History (lower = shorter list).
-  revisionHistoryLimit: 5
+  # How many past Git syncs Argo CD keeps in the UI History / rollback list.
+  # Set here (not only in the UI) so automated sync + selfHeal does not revert it.
+  revisionHistoryLimit: 6
