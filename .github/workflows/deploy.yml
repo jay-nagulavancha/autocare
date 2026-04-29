@@ -11,17 +11,58 @@ permissions:
 
 jobs:
   # ─────────────────────────────────────────────────────────────────
-  # Job 1 — Run tests for all three services
+  # Which autocare runtime components changed? (mono-repo selective deploy)
+  # ─────────────────────────────────────────────────────────────────
+  detect-changes:
+    name: Detect changed paths
+    runs-on: ubuntu-latest
+    outputs:
+      auth: ${{ steps.filter.outputs.auth }}
+      maintenance: ${{ steps.filter.outputs.maintenance }}
+      ui: ${{ steps.filter.outputs.ui }}
+      any_service: ${{ steps.filter.outputs.any_service }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Paths filter
+        uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            auth:
+              - 'autocare/user-auth-service/**'
+            maintenance:
+              - 'autocare/vehicle-maintenance-service/**'
+            ui:
+              - 'autocare/vehicle-maintenance-ui/**'
+            any_service:
+              - 'autocare/user-auth-service/**'
+              - 'autocare/vehicle-maintenance-service/**'
+              - 'autocare/vehicle-maintenance-ui/**'
+
+      - name: Report
+        run: |
+          echo "auth=${{ steps.filter.outputs.auth }} maintenance=${{ steps.filter.outputs.maintenance }} ui=${{ steps.filter.outputs.ui }} any_service=${{ steps.filter.outputs.any_service }}"
+
+  # ─────────────────────────────────────────────────────────────────
+  # Job 1 — Test only affected services (skipped if nothing under autocare/*/ changed)
   # ─────────────────────────────────────────────────────────────────
   test:
     name: Run Tests
     runs-on: ubuntu-latest
+    needs: detect-changes
+    if: needs.detect-changes.outputs.any_service == 'true'
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
       - name: Set up JDK 11
+        if: needs.detect-changes.outputs.auth == 'true' || needs.detect-changes.outputs.maintenance == 'true'
         uses: actions/setup-java@v4
         with:
           java-version: '11'
@@ -29,14 +70,17 @@ jobs:
           cache: maven
 
       - name: Test user-auth-service
+        if: needs.detect-changes.outputs.auth == 'true'
         working-directory: autocare/user-auth-service
         run: ./mvnw test -B
 
       - name: Test vehicle-maintenance-service
+        if: needs.detect-changes.outputs.maintenance == 'true'
         working-directory: autocare/vehicle-maintenance-service
         run: ./mvnw test -B
 
       - name: Set up Node 20
+        if: needs.detect-changes.outputs.ui == 'true'
         uses: actions/setup-node@v4
         with:
           node-version: '20'
@@ -44,19 +88,19 @@ jobs:
           cache-dependency-path: autocare/vehicle-maintenance-ui/package-lock.json
 
       - name: Test vehicle-maintenance-ui
+        if: needs.detect-changes.outputs.ui == 'true'
         working-directory: autocare/vehicle-maintenance-ui
         run: |
           npm ci
           npm run test
-        # Note: skipped if no test files exist — add tests to src/**/*.test.tsx to enable
 
   # ─────────────────────────────────────────────────────────────────
-  # Job 2 — Build Docker images and push to ECR
+  # Job 2 — Build & push Docker images only for components that changed
   # ─────────────────────────────────────────────────────────────────
   build-and-push:
     name: Build and Push Images
     runs-on: ubuntu-latest
-    needs: test
+    needs: [detect-changes, test]
 
     steps:
       - name: Checkout code
@@ -72,6 +116,7 @@ jobs:
         uses: aws-actions/amazon-ecr-login@v2
 
       - name: Build and push user-auth-service
+        if: needs.detect-changes.outputs.auth == 'true'
         run: |
           docker build \
             -t ${{ secrets.ECR_REGISTRY }}/autocare/user-auth-service:${{ github.sha }} \
@@ -79,6 +124,7 @@ jobs:
           docker push ${{ secrets.ECR_REGISTRY }}/autocare/user-auth-service:${{ github.sha }}
 
       - name: Build and push vehicle-maintenance-service
+        if: needs.detect-changes.outputs.maintenance == 'true'
         run: |
           docker build \
             -t ${{ secrets.ECR_REGISTRY }}/autocare/vehicle-maintenance-service:${{ github.sha }} \
@@ -86,6 +132,7 @@ jobs:
           docker push ${{ secrets.ECR_REGISTRY }}/autocare/vehicle-maintenance-service:${{ github.sha }}
 
       - name: Build and push vehicle-maintenance-ui
+        if: needs.detect-changes.outputs.ui == 'true'
         run: |
           docker build \
             --build-arg VITE_AUTH_API_URL=${{ secrets.VITE_AUTH_API_URL }} \
@@ -95,13 +142,12 @@ jobs:
           docker push ${{ secrets.ECR_REGISTRY }}/autocare/vehicle-maintenance-ui:${{ github.sha }}
 
   # ─────────────────────────────────────────────────────────────────
-  # Job 3 — Update image tags in manifests and commit (GitOps)
-  # ArgoCD detects the commit and syncs the cluster — no kubectl here
+  # Job 3 — Bump deployment YAML tags only for images that were rebuilt
   # ─────────────────────────────────────────────────────────────────
   update-manifests:
     name: Update Manifest Image Tags
     runs-on: ubuntu-latest
-    needs: build-and-push
+    needs: [detect-changes, build-and-push]
 
     steps:
       - name: Checkout code
@@ -109,18 +155,30 @@ jobs:
         with:
           persist-credentials: true
 
-      - name: Update image tags in deployment manifests
+      - name: Update image tags (selective)
         env:
           SHA: ${{ github.sha }}
           ECR: ${{ secrets.ECR_REGISTRY }}
+          CHANGED_AUTH: ${{ needs.detect-changes.outputs.auth }}
+          CHANGED_MAINT: ${{ needs.detect-changes.outputs.maintenance }}
+          CHANGED_UI: ${{ needs.detect-changes.outputs.ui }}
         run: |
-          # Replace <ECR_URL>/service:<TAG> placeholder OR existing ECR URL with new tag
-          sed -i "s|image: .*autocare/user-auth-service:.*|image: ${ECR}/autocare/user-auth-service:${SHA}|g" \
-            autocare-infra/k8s/deployments/user-auth-service.yaml
-          sed -i "s|image: .*autocare/vehicle-maintenance-service:.*|image: ${ECR}/autocare/vehicle-maintenance-service:${SHA}|g" \
-            autocare-infra/k8s/deployments/vehicle-maintenance-service.yaml
-          sed -i "s|image: .*autocare/vehicle-maintenance-ui:.*|image: ${ECR}/autocare/vehicle-maintenance-ui:${SHA}|g" \
-            autocare-infra/k8s/deployments/vehicle-maintenance-ui.yaml
+          set -euo pipefail
+          if [ "$CHANGED_AUTH" = "true" ]; then
+            echo "Updating user-auth-service manifest tag -> ${SHA}"
+            sed -i "s|image: .*autocare/user-auth-service:.*|image: ${ECR}/autocare/user-auth-service:${SHA}|g" \
+              autocare-infra/k8s/deployments/user-auth-service.yaml
+          fi
+          if [ "$CHANGED_MAINT" = "true" ]; then
+            echo "Updating vehicle-maintenance-service manifest tag -> ${SHA}"
+            sed -i "s|image: .*autocare/vehicle-maintenance-service:.*|image: ${ECR}/autocare/vehicle-maintenance-service:${SHA}|g" \
+              autocare-infra/k8s/deployments/vehicle-maintenance-service.yaml
+          fi
+          if [ "$CHANGED_UI" = "true" ]; then
+            echo "Updating vehicle-maintenance-ui manifest tag -> ${SHA}"
+            sed -i "s|image: .*autocare/vehicle-maintenance-ui:.*|image: ${ECR}/autocare/vehicle-maintenance-ui:${SHA}|g" \
+              autocare-infra/k8s/deployments/vehicle-maintenance-ui.yaml
+          fi
 
       - name: Commit and push updated manifests
         run: |
