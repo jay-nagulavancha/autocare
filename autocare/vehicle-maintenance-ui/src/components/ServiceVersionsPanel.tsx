@@ -23,8 +23,9 @@ export default function ServiceVersionsPanel() {
   const [maintState, setMaintState] = useState<LoadState>('loading');
 
   useEffect(() => {
-    const authUrl = joinApiPath(getAuthApiBase(), '/api/version');
-    const maintUrl = joinApiPath(getMaintenanceApiBase(), '/api/version');
+    // Paths must align with Ingress: /api/auth/* → user-auth, /api/v1/* → maintenance (/api/version hits the UI).
+    const authUrl = joinApiPath(getAuthApiBase(), '/api/auth/version');
+    const maintUrl = joinApiPath(getMaintenanceApiBase(), '/api/v1/version');
 
     axios
       .get<ServiceVersionPayload>(authUrl, { timeout: 8000 })

@@ -48,7 +48,7 @@ public class WebSecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth ->
                         auth.antMatchers("/actuator/health").permitAll()
-                                .antMatchers("/api/version").permitAll()
+                                .antMatchers("/api/v1/version").permitAll()
                                 .antMatchers("/v3/api-docs/**").permitAll()
                                 .antMatchers("/swagger-ui/**").permitAll()
                                 .antMatchers("/swagger-ui.html").permitAll()

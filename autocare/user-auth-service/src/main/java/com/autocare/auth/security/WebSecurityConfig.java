@@ -76,7 +76,6 @@ public class WebSecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth ->
                         auth.antMatchers("/api/auth/**").permitAll()
-                                .antMatchers("/api/version").permitAll()
                                 .antMatchers("/api/test/**").permitAll()
                                 .antMatchers("/actuator/health").permitAll()
                                 .anyRequest().authenticated()

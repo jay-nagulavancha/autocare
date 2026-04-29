@@ -9,7 +9,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api/version")
+@RequestMapping("/api/v1/version")
 public class VersionController {
 
     @Value("${autocare.service-id}")

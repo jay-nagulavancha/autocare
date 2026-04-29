@@ -8,5 +8,5 @@ data:
   DB_NAME: auth_db
   DB_USERNAME: root
   JWT_EXPIRATION_MS: "86400000"
-  # Shown in UI via GET /api/version — bump with your release tag / commit when you deploy.
+  # Shown in UI via GET /api/auth/version — bump with your release tag / commit when you deploy.
   AUTOCARE_GIT_COMMIT: "ce099046d7d5abffdb004b27fece414997bc726d"
