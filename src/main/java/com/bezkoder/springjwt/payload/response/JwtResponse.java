@@ -1,5 +1,7 @@
 package com.bezkoder.springjwt.payload.response;
 
+
+import java.util.ArrayList;
 import java.util.List;
 
 public class JwtResponse {
@@ -58,7 +60,5 @@ public class JwtResponse {
     this.username = username;
   }
 
-  public List<String> getRoles() {
-    return roles;
-  }
+  public List<String> getRoles() { return roles == null ? null : new ArrayList<>(roles); }
 }
