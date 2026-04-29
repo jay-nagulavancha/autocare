@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
-import axios from 'axios';
-import { getAuthApiBase, getMaintenanceApiBase } from '../config/runtimeEnv';
+import { authClient } from '../api/authClient';
+import { maintenanceClient } from '../api/maintenanceClient';
 import type { ServiceVersionPayload } from '../types';
 import packageJson from '../../package.json';
 
@@ -12,7 +12,8 @@ function formatLine(label: string, payload: ServiceVersionPayload | null, state:
   return `${label}: ${payload.version} (${payload.gitCommit})`;
 }
 
-export default function ServiceVersionsPanel({ compact = false }: { compact?: boolean }) {
+/** Fixed bottom-right footer; shown on every route for demo build visibility. */
+export default function ServiceVersionsPanel() {
   const uiVersion = packageJson.version;
   const [auth, setAuth] = useState<ServiceVersionPayload | null>(null);
   const [maint, setMaint] = useState<ServiceVersionPayload | null>(null);
@@ -20,11 +21,12 @@ export default function ServiceVersionsPanel({ compact = false }: { compact?: bo
   const [maintState, setMaintState] = useState<LoadState>('loading');
 
   useEffect(() => {
-    const authBase = getAuthApiBase();
-    const maintBase = getMaintenanceApiBase();
+    // Use shared axios clients (same base URL merge as rest of UI). Avoid
+    // `${base}/api/version` when base is '/' — it becomes '//api/version' which
+    // browsers treat as protocol-relative host "api".
 
-    axios
-      .get<ServiceVersionPayload>(`${authBase}/api/version`, { timeout: 8000 })
+    authClient
+      .get<ServiceVersionPayload>('/api/version', { timeout: 8000 })
       .then((res) => {
         setAuth(res.data);
         setAuthState('ready');
@@ -34,8 +36,8 @@ export default function ServiceVersionsPanel({ compact = false }: { compact?: bo
         setAuthState('error');
       });
 
-    axios
-      .get<ServiceVersionPayload>(`${maintBase}/api/version`, { timeout: 8000 })
+    maintenanceClient
+      .get<ServiceVersionPayload>('/api/version', { timeout: 8000 })
       .then((res) => {
         setMaint(res.data);
         setMaintState('ready');
@@ -56,17 +58,25 @@ export default function ServiceVersionsPanel({ compact = false }: { compact?: bo
     <aside
       aria-label="Application versions"
       style={{
-        marginTop: compact ? 0 : '2rem',
-        padding: compact ? '0.5rem 1rem' : '1rem',
-        background: compact ? '#0f172a' : '#f8fafc',
-        color: compact ? '#cbd5e1' : '#334155',
-        borderTop: compact ? '1px solid #334155' : '1px solid #e2e8f0',
-        fontSize: compact ? '0.7rem' : '0.8rem',
+        position: 'fixed',
+        bottom: 0,
+        right: 0,
+        zIndex: 1000,
+        maxWidth: 'min(440px, calc(100vw - 16px))',
+        margin: 0,
+        padding: '0.5rem 0.75rem 0.65rem 1rem',
+        background: '#0f172a',
+        color: '#cbd5e1',
+        borderTop: '1px solid #334155',
+        borderLeft: '1px solid #334155',
+        borderTopLeftRadius: 8,
+        fontSize: '0.7rem',
         lineHeight: 1.5,
         fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
+        boxShadow: '0 -4px 24px rgba(15, 23, 42, 0.35)',
       }}
     >
-      <div style={{ fontWeight: 600, marginBottom: compact ? '0.25rem' : '0.5rem', color: compact ? '#94a3b8' : '#1e293b' }}>
+      <div style={{ fontWeight: 600, marginBottom: '0.25rem', color: '#94a3b8' }}>
         Build versions
       </div>
       <ul style={{ margin: 0, paddingLeft: '1.1rem' }}>

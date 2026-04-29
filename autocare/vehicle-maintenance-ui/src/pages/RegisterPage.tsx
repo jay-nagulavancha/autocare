@@ -2,7 +2,6 @@ import { useState, type FormEvent } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { authClient } from '../api/authClient';
 import { useAuth } from '../context/AuthContext';
-import ServiceVersionsPanel from '../components/ServiceVersionsPanel';
 import type { MessageResponse, SignInResponse } from '../types';
 
 export default function RegisterPage() {
@@ -94,7 +93,6 @@ export default function RegisterPage() {
         Already have an account? <Link to="/login">Sign in</Link>
       </p>
     </div>
-    <ServiceVersionsPanel />
     </div>
   );
 }

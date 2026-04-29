@@ -1,6 +1,5 @@
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import ServiceVersionsPanel from './ServiceVersionsPanel';
 
 export default function NavBar() {
   const { logout, user } = useAuth();
@@ -34,7 +33,6 @@ export default function NavBar() {
           </button>
         </span>
       </nav>
-      <ServiceVersionsPanel compact />
     </header>
   );
 }
