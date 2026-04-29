@@ -6,6 +6,7 @@ import DashboardPage from './pages/DashboardPage';
 import WorkOrderListPage from './pages/WorkOrderListPage';
 import WorkOrderDetailPage from './pages/WorkOrderDetailPage';
 import SchedulingPage from './pages/SchedulingPage';
+import AboutPage from './pages/AboutPage';
 
 export default function App() {
   return (
@@ -14,6 +15,7 @@ export default function App() {
       <Route path="/register" element={<RegisterPage />} />
       <Route element={<ProtectedRoute />}>
         <Route path="/" element={<DashboardPage />} />
+        <Route path="/about" element={<AboutPage />} />
         <Route path="/work-orders" element={<WorkOrderListPage />} />
         <Route path="/work-orders/:id" element={<WorkOrderDetailPage />} />
         <Route path="/schedules" element={<SchedulingPage />} />

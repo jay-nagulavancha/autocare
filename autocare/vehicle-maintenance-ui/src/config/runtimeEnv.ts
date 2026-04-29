@@ -7,28 +7,29 @@ declare global {
   }
 }
 
-/** `??` preserves "" which breaks Axios baseURL — treat blank as absent. Keeps '/' (same-origin). */
-function pickBase(injected?: string, buildTime?: string, fallback?: string): string {
-  const i = injected?.trim();
-  if (i !== undefined && i !== '') return i;
-  const b = typeof buildTime === 'string' ? buildTime.trim() : '';
-  if (b !== '') return b;
-  return fallback!;
-}
-
 /** Prefer window.__ENV (written at container start from K8s / Docker env) over Vite build-time vars. */
 export function getAuthApiBase(): string {
-  return pickBase(
-    window.__ENV?.VITE_AUTH_API_URL,
-    import.meta.env.VITE_AUTH_API_URL as string | undefined,
-    'http://localhost:8080',
+  return (
+    window.__ENV?.VITE_AUTH_API_URL ??
+    import.meta.env.VITE_AUTH_API_URL ??
+    'http://localhost:8080'
   );
 }
 
 export function getMaintenanceApiBase(): string {
-  return pickBase(
-    window.__ENV?.VITE_MAINTENANCE_API_URL,
-    import.meta.env.VITE_MAINTENANCE_API_URL as string | undefined,
-    'http://localhost:8081',
+  return (
+    window.__ENV?.VITE_MAINTENANCE_API_URL ??
+    import.meta.env.VITE_MAINTENANCE_API_URL ??
+    'http://localhost:8081'
   );
+}
+
+/**
+ * Combines api base URL with a path without producing '//api/...' when base is '/'.
+ */
+export function joinApiPath(apiBase: string, path: string): string {
+  const p = path.startsWith('/') ? path : `/${path}`;
+  const b = apiBase.trim();
+  if (b === '' || b === '/') return p;
+  return `${b.replace(/\/$/, '')}${p}`;
 }

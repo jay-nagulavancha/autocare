@@ -16,6 +16,9 @@ export default function NavBar() {
         <Link to="/schedules" style={{ color: '#cbd5e1', textDecoration: 'none' }}>
           Schedules
         </Link>
+        <Link to="/about" style={{ color: '#cbd5e1', textDecoration: 'none' }}>
+          About
+        </Link>
         <span style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
           {user && <span style={{ color: '#94a3b8', fontSize: '0.875rem' }}>{user.username}</span>}
           <button

@@ -1,11 +1,8 @@
 import axios from 'axios';
 import { getMaintenanceApiBase } from '../config/runtimeEnv';
 
-export const maintenanceClient = axios.create();
-
-maintenanceClient.interceptors.request.use((config) => {
-  config.baseURL = getMaintenanceApiBase();
-  return config;
+export const maintenanceClient = axios.create({
+  baseURL: getMaintenanceApiBase(),
 });
 
 // Request interceptor — attach JWT

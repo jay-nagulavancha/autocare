@@ -1,6 +1,6 @@
+import axios from 'axios';
 import { useEffect, useState } from 'react';
-import { authClient } from '../api/authClient';
-import { maintenanceClient } from '../api/maintenanceClient';
+import { getAuthApiBase, getMaintenanceApiBase, joinApiPath } from '../config/runtimeEnv';
 import type { ServiceVersionPayload } from '../types';
 import packageJson from '../../package.json';
 
@@ -14,7 +14,7 @@ function formatLine(label: string, payload: ServiceVersionPayload | null, state:
   return `${label}: ${ver} (${git})`;
 }
 
-/** Fixed bottom-right footer; shown on every route for demo build visibility. */
+/** Build / version strip for demo; use from About page after login. */
 export default function ServiceVersionsPanel() {
   const uiVersion = packageJson.version;
   const [auth, setAuth] = useState<ServiceVersionPayload | null>(null);
@@ -23,12 +23,11 @@ export default function ServiceVersionsPanel() {
   const [maintState, setMaintState] = useState<LoadState>('loading');
 
   useEffect(() => {
-    // Use shared axios clients (same base URL merge as rest of UI). Avoid
-    // `${base}/api/version` when base is '/' — it becomes '//api/version' which
-    // browsers treat as protocol-relative host "api".
+    const authUrl = joinApiPath(getAuthApiBase(), '/api/version');
+    const maintUrl = joinApiPath(getMaintenanceApiBase(), '/api/version');
 
-    authClient
-      .get<ServiceVersionPayload>('/api/version', { timeout: 8000 })
+    axios
+      .get<ServiceVersionPayload>(authUrl, { timeout: 8000 })
       .then((res) => {
         setAuth(res.data);
         setAuthState('ready');
@@ -38,8 +37,8 @@ export default function ServiceVersionsPanel() {
         setAuthState('error');
       });
 
-    maintenanceClient
-      .get<ServiceVersionPayload>('/api/version', { timeout: 8000 })
+    axios
+      .get<ServiceVersionPayload>(maintUrl, { timeout: 8000 })
       .then((res) => {
         setMaint(res.data);
         setMaintState('ready');
@@ -60,28 +59,20 @@ export default function ServiceVersionsPanel() {
     <aside
       aria-label="Application versions"
       style={{
-        position: 'fixed',
-        bottom: 0,
-        right: 0,
-        zIndex: 1000,
-        maxWidth: 'min(440px, calc(100vw - 16px))',
-        margin: 0,
-        padding: '0.5rem 0.75rem 0.65rem 1rem',
-        background: '#0f172a',
-        color: '#cbd5e1',
-        borderTop: '1px solid #334155',
-        borderLeft: '1px solid #334155',
-        borderTopLeftRadius: 8,
-        fontSize: '0.7rem',
-        lineHeight: 1.5,
+        marginTop: '1rem',
+        padding: '1rem',
+        background: '#f8fafc',
+        color: '#334155',
+        border: '1px solid #e2e8f0',
+        borderRadius: 8,
+        fontSize: '0.875rem',
+        lineHeight: 1.6,
         fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
-        boxShadow: '0 -4px 24px rgba(15, 23, 42, 0.35)',
+        maxWidth: 560,
       }}
     >
-      <div style={{ fontWeight: 600, marginBottom: '0.25rem', color: '#94a3b8' }}>
-        Build versions
-      </div>
-      <ul style={{ margin: 0, paddingLeft: '1.1rem' }}>
+      <div style={{ fontWeight: 600, marginBottom: '0.5rem', color: '#1e293b' }}>Build versions</div>
+      <ul style={{ margin: 0, paddingLeft: '1.25rem' }}>
         {rows.map((line) => (
           <li key={line}>{line}</li>
         ))}
