@@ -9,7 +9,9 @@ type LoadState = 'loading' | 'ready' | 'error';
 function formatLine(label: string, payload: ServiceVersionPayload | null, state: LoadState): string {
   if (state === 'loading') return `${label}: …`;
   if (state === 'error' || !payload) return `${label}: unreachable`;
-  return `${label}: ${payload.version} (${payload.gitCommit})`;
+  const ver = payload.version ?? '—';
+  const git = payload.gitCommit ?? '—';
+  return `${label}: ${ver} (${git})`;
 }
 
 /** Fixed bottom-right footer; shown on every route for demo build visibility. */
