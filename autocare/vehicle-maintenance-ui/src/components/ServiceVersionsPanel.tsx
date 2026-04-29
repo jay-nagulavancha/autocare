@@ -6,11 +6,21 @@ import packageJson from '../../package.json';
 
 type LoadState = 'loading' | 'ready' | 'error';
 
+/** First 7 chars of a full git SHA; pass through short or non-hex labels (e.g. `local`). */
+function shortGitSha(value: string | undefined | null): string {
+  if (value == null || value === '') return '—';
+  const v = value.trim();
+  if (/^[0-9a-fA-F]{8,64}$/.test(v)) {
+    return v.slice(0, 7);
+  }
+  return v;
+}
+
 function formatLine(label: string, payload: ServiceVersionPayload | null, state: LoadState): string {
   if (state === 'loading') return `${label}: …`;
   if (state === 'error' || !payload) return `${label}: unreachable`;
   const ver = payload.version ?? '—';
-  const git = payload.gitCommit ?? '—';
+  const git = shortGitSha(payload.gitCommit);
   return `${label}: ${ver} (${git})`;
 }
 
