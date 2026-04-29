@@ -1,0 +1,57 @@
+# Demo Issues (DEMO_ONLY)
+
+This `demo/` directory and a few marked snippets in `pom.xml` contain **intentionally
+vulnerable code, infrastructure, and configuration** used to showcase the
+[Code Intelligence Platform](../../code-intelligence-platform) scanner and its
+remediation/PR flow. These are **safe to delete at any time**.
+
+Every implant is tagged with `DEMO_ONLY` so you can find and revert them quickly:
+
+```bash
+git grep -n DEMO_ONLY
+```
+
+## Files added
+
+| Path | Analyzer(s) | Issues |
+| --- | --- | --- |
+| `demo/java/DemoVulnerableController.java` | `security` (semgrep), `secrets` (gitleaks) | Hardcoded creds, hardcoded API key, SQL injection, command injection, weak crypto (MD5), insecure `Random` for tokens, XXE-prone XML parsing |
+| `demo/secrets/.env.demo` | `secrets` (gitleaks) | Fake AWS access key + secret key, GitHub token, Slack bot token, Stripe key, DB password, JWT secret |
+| `demo/terraform/insecure.tf` | `infra` (checkov) | SG open `0.0.0.0/0` on 22/3306, public S3 bucket, unencrypted publicly-accessible RDS, IAM policy `*:*` |
+| `demo/docker/Dockerfile` | `container` (trivy/dockle) | `ubuntu:latest`, runs as root, hardcoded creds, `curl \| sh`, no HEALTHCHECK, no `--no-install-recommends` |
+
+## Files modified
+
+| Path | Analyzer(s) | Issues |
+| --- | --- | --- |
+| `autocare/user-auth-service/pom.xml` | `oss` (dependency-check) | Adds `log4j-core 2.14.1` (CVE-2021-44228, Log4Shell), `commons-text 1.9` (CVE-2022-42889, Text4Shell), `snakeyaml 1.29` (CVE-2022-1471) |
+
+## How to revert
+
+```bash
+# Remove the demo folder
+rm -rf demo/
+
+# Revert pom.xml changes (only the user-auth-service one is modified)
+git checkout -- autocare/user-auth-service/pom.xml
+```
+
+Or in one shot:
+
+```bash
+git checkout -- autocare/user-auth-service/pom.xml && rm -rf demo/
+```
+
+## Suggested demo flow
+
+1. Run a full scan against `autocare` with all analyzers enabled
+   (`security`, `oss`, `secrets`, `infra`, `container`).
+2. Show the categorized findings (severity counts, tool names per finding).
+3. Trigger the PR remediation flow to auto-generate fix PRs:
+   - Bump `log4j-core` to `2.17.2+`, `commons-text` to `1.10.0+`,
+     `snakeyaml` to `2.0+`.
+   - Replace MD5 with SHA-256/Argon2.
+   - Replace `Random` with `SecureRandom`.
+   - Parameterize the SQL statement with `PreparedStatement`.
+   - Restrict the open SG ingress, encrypt RDS, lock down S3.
+   - Pin Dockerfile to a specific tag, drop to non-root, add HEALTHCHECK.
