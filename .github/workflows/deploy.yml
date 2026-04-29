@@ -145,29 +145,48 @@ jobs:
 
       - name: Build and push user-auth-service
         if: needs.detect-changes.outputs.auth == 'true'
+        env:
+          ECR_REGISTRY: ${{ secrets.ECR_REGISTRY }}
+          GIT_SHA: ${{ github.sha }}
         run: |
+          BUILD_TIME="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
           docker build \
-            -t ${{ secrets.ECR_REGISTRY }}/autocare/user-auth-service:${{ github.sha }} \
+            --build-arg "AUTOCARE_GIT_COMMIT=${GIT_SHA}" \
+            --build-arg "AUTOCARE_BUILD_TIME=${BUILD_TIME}" \
+            -t "${ECR_REGISTRY}/autocare/user-auth-service:${GIT_SHA}" \
             autocare/user-auth-service/
-          docker push ${{ secrets.ECR_REGISTRY }}/autocare/user-auth-service:${{ github.sha }}
+          docker push "${ECR_REGISTRY}/autocare/user-auth-service:${GIT_SHA}"
 
       - name: Build and push vehicle-maintenance-service
         if: needs.detect-changes.outputs.maintenance == 'true'
+        env:
+          ECR_REGISTRY: ${{ secrets.ECR_REGISTRY }}
+          GIT_SHA: ${{ github.sha }}
         run: |
+          BUILD_TIME="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
           docker build \
-            -t ${{ secrets.ECR_REGISTRY }}/autocare/vehicle-maintenance-service:${{ github.sha }} \
+            --build-arg "AUTOCARE_GIT_COMMIT=${GIT_SHA}" \
+            --build-arg "AUTOCARE_BUILD_TIME=${BUILD_TIME}" \
+            -t "${ECR_REGISTRY}/autocare/vehicle-maintenance-service:${GIT_SHA}" \
             autocare/vehicle-maintenance-service/
-          docker push ${{ secrets.ECR_REGISTRY }}/autocare/vehicle-maintenance-service:${{ github.sha }}
+          docker push "${ECR_REGISTRY}/autocare/vehicle-maintenance-service:${GIT_SHA}"
 
       - name: Build and push vehicle-maintenance-ui
         if: needs.detect-changes.outputs.ui == 'true'
+        env:
+          ECR_REGISTRY: ${{ secrets.ECR_REGISTRY }}
+          GIT_SHA: ${{ github.sha }}
+          VITE_AUTH_API_URL: ${{ secrets.VITE_AUTH_API_URL }}
+          VITE_MAINTENANCE_API_URL: ${{ secrets.VITE_MAINTENANCE_API_URL }}
         run: |
+          BUILD_TIME="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
           docker build \
-            --build-arg VITE_AUTH_API_URL=${{ secrets.VITE_AUTH_API_URL }} \
-            --build-arg VITE_MAINTENANCE_API_URL=${{ secrets.VITE_MAINTENANCE_API_URL }} \
-            -t ${{ secrets.ECR_REGISTRY }}/autocare/vehicle-maintenance-ui:${{ github.sha }} \
+            --build-arg "VITE_AUTH_API_URL=${VITE_AUTH_API_URL}" \
+            --build-arg "VITE_MAINTENANCE_API_URL=${VITE_MAINTENANCE_API_URL}" \
+            --build-arg "VITE_BUILD_TIME=${BUILD_TIME}" \
+            -t "${ECR_REGISTRY}/autocare/vehicle-maintenance-ui:${GIT_SHA}" \
             autocare/vehicle-maintenance-ui/
-          docker push ${{ secrets.ECR_REGISTRY }}/autocare/vehicle-maintenance-ui:${{ github.sha }}
+          docker push "${ECR_REGISTRY}/autocare/vehicle-maintenance-ui:${GIT_SHA}"
 
   # ─────────────────────────────────────────────────────────────────
   # Job 3 — Bump deployment YAML tags only for images that were rebuilt

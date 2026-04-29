@@ -10,7 +10,9 @@ RUN ./mvnw clean package -DskipTests -B
 # Stage 2: runtime
 FROM eclipse-temurin:17-jre-alpine
 ARG AUTOCARE_GIT_COMMIT=docker
-ENV AUTOCARE_GIT_COMMIT=$AUTOCARE_GIT_COMMIT
+ARG AUTOCARE_BUILD_TIME=unknown
+ENV AUTOCARE_GIT_COMMIT=$AUTOCARE_GIT_COMMIT \
+    AUTOCARE_BUILD_TIME=$AUTOCARE_BUILD_TIME
 WORKDIR /app
 COPY --from=build /app/target/*.jar app.jar
 EXPOSE 8081

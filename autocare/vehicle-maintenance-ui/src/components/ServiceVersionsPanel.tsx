@@ -16,24 +16,42 @@ function shortGitSha(value: string | undefined | null): string {
   return v;
 }
 
+/** Human-readable UTC date/time label for ISO-8601 `buildTime` from APIs or VITE_BUILD_TIME. */
+function formatUtcLabel(iso: string | undefined | null): string | null {
+  if (iso == null || iso === '') return null;
+  if (iso.trim() === 'unknown') return null;
+  const t = Date.parse(iso);
+  if (!Number.isNaN(t)) {
+    const formatted = new Intl.DateTimeFormat(undefined, {
+      dateStyle: 'medium',
+      timeStyle: 'short',
+      timeZone: 'UTC',
+    }).format(t);
+    return `${formatted} UTC`;
+  }
+  return iso;
+}
+
 function formatLine(label: string, payload: ServiceVersionPayload | null, state: LoadState): string {
   if (state === 'loading') return `${label}: …`;
   if (state === 'error' || !payload) return `${label}: unreachable`;
   const ver = payload.version ?? '—';
   const git = shortGitSha(payload.gitCommit);
-  return `${label}: ${ver} (${git})`;
+  const core = `${ver} (${git})`;
+  const when = formatUtcLabel(payload.buildTime ?? null);
+  return when ? `${label}: ${core} · built ${when}` : `${label}: ${core}`;
 }
 
 /** Build / version strip for demo; use from About page after login. */
 export default function ServiceVersionsPanel() {
   const uiVersion = packageJson.version;
+  const uiBuilt = formatUtcLabel(import.meta.env.VITE_BUILD_TIME ?? null);
   const [auth, setAuth] = useState<ServiceVersionPayload | null>(null);
   const [maint, setMaint] = useState<ServiceVersionPayload | null>(null);
   const [authState, setAuthState] = useState<LoadState>('loading');
   const [maintState, setMaintState] = useState<LoadState>('loading');
 
   useEffect(() => {
-    // Paths must align with Ingress: /api/auth/* → user-auth, /api/v1/* → maintenance (/api/version hits the UI).
     const authUrl = joinApiPath(getAuthApiBase(), '/api/auth/version');
     const maintUrl = joinApiPath(getMaintenanceApiBase(), '/api/v1/version');
 
@@ -60,8 +78,12 @@ export default function ServiceVersionsPanel() {
       });
   }, []);
 
+  const uiRow = uiBuilt
+    ? `UI (vehicle-maintenance-ui): ${uiVersion} · built ${uiBuilt}`
+    : `UI (vehicle-maintenance-ui): ${uiVersion}`;
+
   const rows = [
-    `UI (vehicle-maintenance-ui): ${uiVersion}`,
+    uiRow,
     formatLine('Auth API (user-auth-service)', auth, authState),
     formatLine('Maintenance API (vehicle-maintenance-service)', maint, maintState),
   ];

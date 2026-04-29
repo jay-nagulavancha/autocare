@@ -21,12 +21,16 @@ public class VersionController {
     @Value("${autocare.build.git-commit}")
     private String gitCommit;
 
+    @Value("${autocare.build.time}")
+    private String buildTime;
+
     @GetMapping
     public Map<String, String> version() {
         Map<String, String> body = new LinkedHashMap<>();
         body.put("service", serviceId);
         body.put("version", version);
         body.put("gitCommit", gitCommit);
+        body.put("buildTime", buildTime);
         return body;
     }
 }

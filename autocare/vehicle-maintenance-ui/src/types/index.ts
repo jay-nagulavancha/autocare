@@ -159,4 +159,5 @@ export interface ServiceVersionPayload {
   service: string;
   version: string;
   gitCommit: string;
+  buildTime?: string;
 }
