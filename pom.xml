@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+
+	<!-- Root is wrapper-only: JWT/auth app lives under autocare/user-auth-service/.
+	     Legacy repo-root src/ (BezKoder sample) was removed to avoid duplicate/conflicting builds. -->
+	<groupId>com.autocare</groupId>
+	<artifactId>autocare-repository-root</artifactId>
+	<version>0.0.1-SNAPSHOT</version>
+	<packaging>pom</packaging>
+	<name>autocare-repository-root</name>
+	<description>Monorepo root placeholder POM (no Java sources here). Use autocare/*/ services for builds.</description>
+
+</project>
