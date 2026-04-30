@@ -79,9 +79,11 @@ public class User {
     this.password = password;
   }
 
-  public Set<Role> getRoles() { return roles == null ? null : new HashSet<>(roles); }
+  public Set<Role> getRoles() {
+    return roles;
+  }
 
   public void setRoles(Set<Role> roles) {
-    this.roles = this.roles = roles == null ? null : new HashSet<>(roles);
+    this.roles = roles;
   }
 }
