@@ -1,0 +1,36 @@
+# DEMO_ONLY — Intentionally insecure Kubernetes manifest for Checkov/kubesec-style demos.
+# DO NOT apply to a real cluster. Safe to delete this file.
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: autocare-demo-insecure
+  labels:
+    app.kubernetes.io/name: autocare-demo-insecure
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: autocare-demo-insecure
+  template:
+    metadata:
+      labels:
+        app: autocare-demo-insecure
+    spec:
+      hostPID: true
+      hostNetwork: true
+      containers:
+        - name: demo-app
+          image: nginx:latest
+          securityContext:
+            privileged: true
+            allowPrivilegeEscalation: true
+            runAsUser: 0
+            readOnlyRootFilesystem: false
+          env:
+            - name: JWT_SECRET
+              value: "DEMO_ONLY_hardcoded_jwt_do_not_use"
+            - name: DATABASE_PASSWORD
+              value: "SuperSecret123!"
+          ports:
+            - containerPort: 80

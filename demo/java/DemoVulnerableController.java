@@ -2,6 +2,14 @@
 // Code Intelligence Platform scanner. DO NOT deploy. Safe to delete this file.
 package com.autocare.demo;
 
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
+import java.io.ObjectInputStream;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.security.MessageDigest;
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -56,6 +64,28 @@ public class DemoVulnerableController {
         javax.xml.parsers.DocumentBuilderFactory dbf =
                 javax.xml.parsers.DocumentBuilderFactory.newInstance();
         javax.xml.parsers.DocumentBuilder db = dbf.newDocumentBuilder();
-        db.parse(new java.io.ByteArrayInputStream(xml.getBytes()));
+        db.parse(new ByteArrayInputStream(xml.getBytes(StandardCharsets.UTF_8)));
+    }
+
+    // DEMO_ONLY — Unsafe Java deserialization on attacker-controlled bytes (critical / CWE-502)
+    public Object deserializeUntrustedPayload(byte[] serialized) throws Exception {
+        try (ObjectInputStream ois = new ObjectInputStream(new ByteArrayInputStream(serialized))) {
+            return ois.readObject();
+        }
+    }
+
+    // DEMO_ONLY — Path traversal: user-controlled filename joined to base path (critical / CWE-22)
+    public byte[] readCustomerAttachment(String filename) throws Exception {
+        Path base = Paths.get("/var/autocare/attachments");
+        Path resolved = base.resolve(filename).normalize();
+        return Files.readAllBytes(resolved);
+    }
+
+    // DEMO_ONLY — SSRF: server-side fetch to caller-supplied URL (critical / CWE-918)
+    public String fetchExternalDiagnostics(String urlString) throws Exception {
+        URL url = new URL(urlString);
+        try (InputStream in = url.openStream()) {
+            return new String(in.readAllBytes(), StandardCharsets.UTF_8);
+        }
     }
 }

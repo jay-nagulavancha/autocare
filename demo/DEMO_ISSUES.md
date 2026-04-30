@@ -15,10 +15,11 @@ git grep -n DEMO_ONLY
 
 | Path | Analyzer(s) | Issues |
 | --- | --- | --- |
-| `demo/java/DemoVulnerableController.java` | `security` (semgrep), `secrets` (gitleaks) | Hardcoded creds, hardcoded API key, SQL injection, command injection, weak crypto (MD5), insecure `Random` for tokens, XXE-prone XML parsing |
+| `demo/java/DemoVulnerableController.java` | `security` (semgrep), `secrets` (gitleaks) | Hardcoded creds, hardcoded API key, SQL injection, command injection, weak crypto (MD5), insecure `Random` for tokens, XXE-prone XML parsing, **unsafe deserialization (`ObjectInputStream`)**, **path traversal (`Paths.resolve` + user filename)**, **SSRF (`URL.openStream` + user URL)** |
 | `demo/secrets/.env.demo` | `secrets` (gitleaks) | Fake AWS access key + secret key, GitHub token, Slack bot token, Stripe key, DB password, JWT secret |
 | `demo/terraform/insecure.tf` | `infra` (checkov) | SG open `0.0.0.0/0` on 22/3306, public S3 bucket, unencrypted publicly-accessible RDS, IAM policy `*:*` |
 | `demo/docker/Dockerfile` | `container` (trivy/dockle) | `ubuntu:latest`, runs as root, hardcoded creds, `curl \| sh`, no HEALTHCHECK, no `--no-install-recommends` |
+| `demo/k8s/insecure-deployment.yaml` | `infra` (checkov) | `privileged`, `hostPID`, `hostNetwork`, `nginx:latest`, root UID, secrets in plain `env`, writable root FS |
 
 ## Files modified
 
@@ -42,6 +43,8 @@ Or in one shot:
 git checkout -- autocare/user-auth-service/pom.xml && rm -rf demo/
 ```
 
+(`rm -rf demo/` removes all demo implants including `demo/k8s/`.)
+
 ## Suggested demo flow
 
 1. Run a full scan against `autocare` with all analyzers enabled
@@ -54,4 +57,5 @@ git checkout -- autocare/user-auth-service/pom.xml && rm -rf demo/
    - Replace `Random` with `SecureRandom`.
    - Parameterize the SQL statement with `PreparedStatement`.
    - Restrict the open SG ingress, encrypt RDS, lock down S3.
+   - Harden `demo/k8s/insecure-deployment.yaml`: drop `privileged` / `hostPID` / `hostNetwork`, pin image digest or tag, use secrets refs, non-root.
    - Pin Dockerfile to a specific tag, drop to non-root, add HEALTHCHECK.
