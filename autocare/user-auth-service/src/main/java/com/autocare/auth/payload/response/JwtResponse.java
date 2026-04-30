@@ -1,7 +1,5 @@
 package com.autocare.auth.payload.response;
 
-
-import java.util.ArrayList;
 import java.util.List;
 
 public class JwtResponse {
@@ -36,5 +34,5 @@ public class JwtResponse {
     public String getUsername() { return username; }
     public void setUsername(String username) { this.username = username; }
 
-    public List<String> getRoles() { return roles == null ? null : new ArrayList<>(roles); }
+    public List<String> getRoles() { return roles; }
 }
