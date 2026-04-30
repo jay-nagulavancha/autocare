@@ -1,5 +1,7 @@
 package com.bezkoder.springjwt.payload.request;
 
+
+import java.util.HashSet;
 import java.util.Set;
 
 import jakarta.validation.constraints.*;
@@ -44,11 +46,9 @@ public class SignupRequest {
     this.password = password;
   }
 
-  public Set<String> getRole() {
-    return this.role;
-  }
+  public Set<String> getRole() { return role == null ? null : new HashSet<>(role); }
 
   public void setRole(Set<String> role) {
-    this.role = role;
+    this.role = this.role = role == null ? null : new HashSet<>(role);
   }
 }
