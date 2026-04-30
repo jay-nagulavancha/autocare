@@ -27,7 +27,7 @@ git grep -n DEMO_ONLY
 | Path | Analyzer(s) | Issues |
 | --- | --- | --- |
 | `autocare/user-auth-service/pom.xml` | `oss` (dependency-check) | Adds `log4j-core 2.14.1` (CVE-2021-44228, Log4Shell), `commons-text 1.9` (CVE-2022-42889, Text4Shell), `snakeyaml 1.29` (CVE-2022-1471) |
-| `autocare/vehicle-maintenance-service/pom.xml` | `oss` (dependency-check) | **DEMO_ONLY:** direct `commons-text` **1.9** (CVE-2022-42889) — not imported by app code |
+| `autocare/vehicle-maintenance-service/pom.xml` | `oss` (dependency-check) | **DEMO_ONLY:** `commons-text` **1.9** (CVE-2022-42889, often **high** CVSS in reports), `log4j-core` **2.14.1** (CVE-2021-44228 Log4Shell, **critical** when CVSS ≥ 9 in platform mapping). Neither dep is referenced by app code. |
 
 ## Files added (vehicle-maintenance-service)
 
