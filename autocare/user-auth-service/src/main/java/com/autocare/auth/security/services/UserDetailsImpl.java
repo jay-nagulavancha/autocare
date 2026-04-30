@@ -76,11 +76,11 @@ public class UserDetailsImpl implements UserDetails {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         UserDetailsImpl user = (UserDetailsImpl) o;
-        return Objects.equals(id, user.id);
+        return Objects.equals(id, user.id) && Objects.equals(username, user.username) && Objects.equals(email, user.email);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id);
+        return Objects.hash(id, username, email);
     }
 }

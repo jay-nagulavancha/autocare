@@ -59,6 +59,22 @@ class UserDetailsImplTest {
     }
 
     @Test
+    void build_emptyRoles_returnsEmptyCollection() {
+        User user = buildUser(1L, "admin", Collections.emptySet());
+
+        UserDetailsImpl details = UserDetailsImpl.build(user);
+
+        assertThat(details.getAuthorities()).isEmpty();
+    }
+
+    @Test
+    void build_nullRoles_throwsNullPointerException() {
+        User user = buildUser(1L, "admin", null);
+
+        assertThrows(NullPointerException.class, () -> UserDetailsImpl.build(user));
+    }
+
+    @Test
     void equals_sameId_differentUsername_areEqual() {
         UserDetailsImpl a = new UserDetailsImpl(42L, "alice", "alice@test.com", "pw", Collections.emptyList());
         UserDetailsImpl b = new UserDetailsImpl(42L, "bob", "bob@test.com", "pw2", Collections.emptyList());
@@ -70,6 +86,30 @@ class UserDetailsImplTest {
     void equals_differentId_areNotEqual() {
         UserDetailsImpl a = new UserDetailsImpl(1L, "alice", "alice@test.com", "pw", Collections.emptyList());
         UserDetailsImpl b = new UserDetailsImpl(2L, "alice", "alice@test.com", "pw", Collections.emptyList());
+
+        assertThat(a).isNotEqualTo(b);
+    }
+
+    @Test
+    void equals_sameId_sameUsername_sameEmail_samePassword_areEqual() {
+        UserDetailsImpl a = new UserDetailsImpl(42L, "alice", "alice@test.com", "pw", Collections.emptyList());
+        UserDetailsImpl b = new UserDetailsImpl(42L, "alice", "alice@test.com", "pw", Collections.emptyList());
+
+        assertThat(a).isEqualTo(b);
+    }
+
+    @Test
+    void equals_sameId_sameUsername_differentEmail_areNotEqual() {
+        UserDetailsImpl a = new UserDetailsImpl(42L, "alice", "alice@test.com", "pw", Collections.emptyList());
+        UserDetailsImpl b = new UserDetailsImpl(42L, "alice", "bob@test.com", "pw", Collections.emptyList());
+
+        assertThat(a).isNotEqualTo(b);
+    }
+
+    @Test
+    void equals_sameId_sameUsername_sameEmail_differentPassword_areNotEqual() {
+        UserDetailsImpl a = new UserDetailsImpl(42L, "alice", "alice@test.com", "pw", Collections.emptyList());
+        UserDetailsImpl b = new UserDetailsImpl(42L, "alice", "alice@test.com", "pw2", Collections.emptyList());
 
         assertThat(a).isNotEqualTo(b);
     }
