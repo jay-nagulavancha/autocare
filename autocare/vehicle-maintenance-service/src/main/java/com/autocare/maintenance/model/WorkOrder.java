@@ -1,5 +1,7 @@
 package com.autocare.maintenance.model;
 
+
+import java.util.HashSet;
 import javax.persistence.*;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -64,10 +66,10 @@ public class WorkOrder {
     public void setDescription(String description) { this.description = description; }
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
-    public Set<PartLine> getPartLines() { return partLines; }
-    public void setPartLines(Set<PartLine> partLines) { this.partLines = partLines; }
-    public Set<LaborLine> getLaborLines() { return laborLines; }
-    public void setLaborLines(Set<LaborLine> laborLines) { this.laborLines = laborLines; }
-    public Set<WorkOrderStatusHistory> getStatusHistory() { return statusHistory; }
-    public void setStatusHistory(Set<WorkOrderStatusHistory> statusHistory) { this.statusHistory = statusHistory; }
+    public Set<PartLine> getPartLines() { return partLines == null ? null : new HashSet<>(partLines); }
+    public void setPartLines(Set<PartLine> partLines) { this.partLines = this.partLines = partLines == null ? null : new HashSet<>(partLines); }
+    public Set<LaborLine> getLaborLines() { return laborLines == null ? null : new HashSet<>(laborLines); }
+    public void setLaborLines(Set<LaborLine> laborLines) { this.laborLines = this.laborLines = laborLines == null ? null : new HashSet<>(laborLines); }
+    public Set<WorkOrderStatusHistory> getStatusHistory() { return statusHistory == null ? null : new HashSet<>(statusHistory); }
+    public void setStatusHistory(Set<WorkOrderStatusHistory> statusHistory) { this.statusHistory = this.statusHistory = statusHistory == null ? null : new HashSet<>(statusHistory); }
 }

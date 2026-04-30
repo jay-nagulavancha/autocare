@@ -1,5 +1,7 @@
 package com.autocare.maintenance.payload.response;
 
+
+import java.util.ArrayList;
 import com.autocare.maintenance.model.WorkOrder;
 import com.autocare.maintenance.model.WorkOrderStatus;
 import com.autocare.maintenance.model.Vehicle;
@@ -49,8 +51,8 @@ public class WorkOrderResponse {
     public WorkOrderStatus getStatus() { return status; }
     public String getDescription() { return description; }
     public LocalDateTime getCreatedAt() { return createdAt; }
-    public List<PartLineResponse> getPartLines() { return partLines; }
-    public List<LaborLineResponse> getLaborLines() { return laborLines; }
-    public List<StatusHistoryResponse> getStatusHistory() { return statusHistory; }
+    public List<PartLineResponse> getPartLines() { return partLines == null ? null : new ArrayList<>(partLines); }
+    public List<LaborLineResponse> getLaborLines() { return laborLines == null ? null : new ArrayList<>(laborLines); }
+    public List<StatusHistoryResponse> getStatusHistory() { return statusHistory == null ? null : new ArrayList<>(statusHistory); }
     public BigDecimal getTotalCost() { return totalCost; }
 }
