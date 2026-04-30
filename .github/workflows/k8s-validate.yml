@@ -1,9 +1,8 @@
 name: Kubernetes Manifest Validate
 
+# PR checks disabled — run manually: Actions → this workflow → "Run workflow".
 on:
-  pull_request:
-    branches:
-      - main
+  workflow_dispatch:
 
 permissions:
   contents: read
