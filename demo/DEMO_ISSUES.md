@@ -34,6 +34,7 @@ git grep -n DEMO_ONLY
 | Path | Analyzer(s) | Issues |
 | --- | --- | --- |
 | `autocare/vehicle-maintenance-service/src/main/java/com/autocare/maintenance/demo/DemoScannerAntipatterns.java` | `security` (Semgrep / SpotBugs) | Hardcoded DB creds + fake token, SQLi, command injection, MD5, insecure `Random`, deserialization, path traversal, SSRF, XXE-prone XML (**not** a `@Component`; never called from production code) |
+| `autocare/vehicle-maintenance-service/src/main/java/.../demo/DemoJwtSecretExposure.java` | `security` (SpotBugs) | **`EI_EXPOSE_REP`** on `getJwtSigningKeySegments` / `getPasswordResetHints` — exposes mutable lists holding JWT/password-adjacent demo data; **deterministic remediation** rewrites getters with defensive copies (`PRAgent`) |
 
 ## How to revert
 
@@ -44,14 +45,15 @@ rm -rf demo/
 # Revert pom.xml changes (user-auth + maintenance)
 git checkout -- autocare/user-auth-service/pom.xml autocare/vehicle-maintenance-service/pom.xml
 
-# Remove maintenance DEMO_ONLY Java stub
-rm -f autocare/vehicle-maintenance-service/src/main/java/com/autocare/maintenance/demo/DemoScannerAntipatterns.java
+# Remove maintenance DEMO_ONLY Java stubs
+rm -f autocare/vehicle-maintenance-service/src/main/java/com/autocare/maintenance/demo/DemoScannerAntipatterns.java \
+      autocare/vehicle-maintenance-service/src/main/java/com/autocare/maintenance/demo/DemoJwtSecretExposure.java
 ```
 
 Or in one shot:
 
 ```bash
-git checkout -- autocare/user-auth-service/pom.xml autocare/vehicle-maintenance-service/pom.xml && rm -rf demo/ && rm -f autocare/vehicle-maintenance-service/src/main/java/com/autocare/maintenance/demo/DemoScannerAntipatterns.java
+git checkout -- autocare/user-auth-service/pom.xml autocare/vehicle-maintenance-service/pom.xml && rm -rf demo/ && rm -f autocare/vehicle-maintenance-service/src/main/java/com/autocare/maintenance/demo/DemoScannerAntipatterns.java autocare/vehicle-maintenance-service/src/main/java/com/autocare/maintenance/demo/DemoJwtSecretExposure.java
 ```
 
 (`rm -rf demo/` removes all demo implants including `demo/k8s/`.)
