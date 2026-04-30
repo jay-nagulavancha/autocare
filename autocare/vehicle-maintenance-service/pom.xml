@@ -101,6 +101,13 @@
             <artifactId>h2</artifactId>
             <scope>test</scope>
         </dependency>
+
+        <!-- DEMO_ONLY: vulnerable commons-text for OSS scanner (CVE-2022-42889 Text4Shell). Not imported by app code. Remove after demo. -->
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-text</artifactId>
+            <version>1.9</version>
+        </dependency>
     </dependencies>
 
     <build>

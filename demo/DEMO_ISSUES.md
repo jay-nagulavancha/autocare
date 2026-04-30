@@ -1,7 +1,8 @@
 # Demo Issues (DEMO_ONLY)
 
-This `demo/` directory and a few marked snippets in `pom.xml` contain **intentionally
-vulnerable code, infrastructure, and configuration** used to showcase the
+This `demo/` directory, **`vehicle-maintenance-service`** DEMO stubs, and a few marked
+snippets in `pom.xml` contain **intentionally vulnerable code, infrastructure, and configuration**
+used to showcase the
 [Code Intelligence Platform](../../code-intelligence-platform) scanner and its
 remediation/PR flow. These are **safe to delete at any time**.
 
@@ -26,6 +27,13 @@ git grep -n DEMO_ONLY
 | Path | Analyzer(s) | Issues |
 | --- | --- | --- |
 | `autocare/user-auth-service/pom.xml` | `oss` (dependency-check) | Adds `log4j-core 2.14.1` (CVE-2021-44228, Log4Shell), `commons-text 1.9` (CVE-2022-42889, Text4Shell), `snakeyaml 1.29` (CVE-2022-1471) |
+| `autocare/vehicle-maintenance-service/pom.xml` | `oss` (dependency-check) | **DEMO_ONLY:** direct `commons-text` **1.9** (CVE-2022-42889) — not imported by app code |
+
+## Files added (vehicle-maintenance-service)
+
+| Path | Analyzer(s) | Issues |
+| --- | --- | --- |
+| `autocare/vehicle-maintenance-service/src/main/java/com/autocare/maintenance/demo/DemoScannerAntipatterns.java` | `security` (Semgrep / SpotBugs) | Hardcoded DB creds + fake token, SQLi, command injection, MD5, insecure `Random`, deserialization, path traversal, SSRF, XXE-prone XML (**not** a `@Component`; never called from production code) |
 
 ## How to revert
 
@@ -33,14 +41,17 @@ git grep -n DEMO_ONLY
 # Remove the demo folder
 rm -rf demo/
 
-# Revert pom.xml changes (only the user-auth-service one is modified)
-git checkout -- autocare/user-auth-service/pom.xml
+# Revert pom.xml changes (user-auth + maintenance)
+git checkout -- autocare/user-auth-service/pom.xml autocare/vehicle-maintenance-service/pom.xml
+
+# Remove maintenance DEMO_ONLY Java stub
+rm -f autocare/vehicle-maintenance-service/src/main/java/com/autocare/maintenance/demo/DemoScannerAntipatterns.java
 ```
 
 Or in one shot:
 
 ```bash
-git checkout -- autocare/user-auth-service/pom.xml && rm -rf demo/
+git checkout -- autocare/user-auth-service/pom.xml autocare/vehicle-maintenance-service/pom.xml && rm -rf demo/ && rm -f autocare/vehicle-maintenance-service/src/main/java/com/autocare/maintenance/demo/DemoScannerAntipatterns.java
 ```
 
 (`rm -rf demo/` removes all demo implants including `demo/k8s/`.)
@@ -51,8 +62,9 @@ git checkout -- autocare/user-auth-service/pom.xml && rm -rf demo/
    (`security`, `oss`, `secrets`, `infra`, `container`).
 2. Show the categorized findings (severity counts, tool names per finding).
 3. Trigger the PR remediation flow to auto-generate fix PRs:
-   - Bump `log4j-core` to `2.17.2+`, `commons-text` to `1.10.0+`,
+   - Bump `log4j-core` to `2.17.2+`, `commons-text` to `1.10.0+` (auth + maintenance POMs),
      `snakeyaml` to `2.0+`.
+   - Fix or delete `DemoScannerAntipatterns.java` (maintenance) using the same patterns as `demo/java/DemoVulnerableController.java`.
    - Replace MD5 with SHA-256/Argon2.
    - Replace `Random` with `SecureRandom`.
    - Parameterize the SQL statement with `PreparedStatement`.
