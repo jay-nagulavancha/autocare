@@ -1,5 +1,7 @@
 package com.autocare.auth.payload.request;
 
+
+import java.util.HashSet;
 import java.util.Set;
 
 import javax.validation.constraints.*;
@@ -30,6 +32,6 @@ public class SignupRequest {
     public String getPassword() { return password; }
     public void setPassword(String password) { this.password = password; }
 
-    public Set<String> getRole() { return this.role; }
-    public void setRole(Set<String> role) { this.role = role; }
+    public Set<String> getRole() { return role == null ? null : new HashSet<>(role); }
+    public void setRole(Set<String> role) { this.role = this.role = role == null ? null : new HashSet<>(role); }
 }
