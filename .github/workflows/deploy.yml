@@ -235,3 +235,61 @@ jobs:
           git diff --staged --quiet && echo "No manifest changes to commit" && exit 0
           git commit -m "chore: update image tags to ${{ github.sha }} [skip ci]"
           git push
+
+  # ─────────────────────────────────────────────────────────────────
+  # Retention: GitHub has no per-workflow YAML knob for run logs/artifacts.
+  # Delete completed runs of *this* workflow older than 1 day (via API).
+  # Runs after path detection only so it still executes when test/build are skipped.
+  # ─────────────────────────────────────────────────────────────────
+  prune-old-workflow-runs:
+    name: Prune workflow runs older than 1 day
+    runs-on: ubuntu-latest
+    needs: [detect-changes]
+    if: always()
+    permissions:
+      actions: write
+      contents: read
+
+    steps:
+      - name: Delete stale Deploy workflow runs
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const workflow_id = 'deploy.yml';
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const currentRunId = context.runId;
+            const cutoffMs = Date.now() - 24 * 60 * 60 * 1000;
+            let page = 1;
+            let deleted = 0;
+            const maxPages = 50;
+
+            while (page <= maxPages) {
+              const { data } = await github.rest.actions.listWorkflowRuns({
+                owner,
+                repo,
+                workflow_id,
+                per_page: 100,
+                page,
+              });
+              const runs = data.workflow_runs || [];
+              if (runs.length === 0) break;
+
+              for (const run of runs) {
+                if (run.id === currentRunId) continue;
+                const created = new Date(run.created_at).getTime();
+                if (created >= cutoffMs) continue;
+                if (run.status !== 'completed') continue;
+                await github.rest.actions.deleteWorkflowRun({
+                  owner,
+                  repo,
+                  run_id: run.id,
+                });
+                deleted++;
+              }
+
+              if (runs.length < 100) break;
+              page++;
+            }
+
+            core.info(`Pruned ${deleted} completed workflow run(s) older than 1 day (excluding current ${currentRunId}).`);
