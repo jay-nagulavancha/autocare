@@ -1,6 +1,7 @@
 package com.autocare.auth.payload.response;
 
 import java.util.List;
+import java.util.Collections;
 
 public class JwtResponse {
 
@@ -16,7 +17,7 @@ public class JwtResponse {
         this.id = id;
         this.username = username;
         this.email = email;
-        this.roles = roles;
+        this.roles = Collections.unmodifiableList(roles);
     }
 
     public String getAccessToken() { return token; }
