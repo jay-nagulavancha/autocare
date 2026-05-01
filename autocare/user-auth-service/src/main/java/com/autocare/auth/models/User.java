@@ -58,7 +58,11 @@ public class User {
     public void setEmail(String email) { this.email = email; }
 
     public String getPassword() { return password; }
-    public void setPassword(String password) { this.password = password; }
+    public void setPassword(String password) {
+        // Remove any sensitive information from the password before storing it
+        this.password = password.replaceAll("\\s", "");
+        this.password = password.substring(0, 120);
+    }
 
     public Set<Role> getRoles() { return roles; }
     public void setRoles(Set<Role> roles) { this.roles = roles; }
