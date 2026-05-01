@@ -242,7 +242,7 @@ jobs:
   # Runs after path detection only so it still executes when test/build are skipped.
   # ─────────────────────────────────────────────────────────────────
   prune-old-workflow-runs:
-    name: Prune workflow runs older than 1 day
+    name: Prune workflow runs older than 1 hour
     runs-on: ubuntu-latest
     needs: [detect-changes]
     if: always()
@@ -259,7 +259,7 @@ jobs:
             const owner = context.repo.owner;
             const repo = context.repo.repo;
             const currentRunId = context.runId;
-            const cutoffMs = Date.now() - 24 * 60 * 60 * 1000;
+            const cutoffMs = Date.now() - 1 * 60 * 60 * 1000;
             let page = 1;
             let deleted = 0;
             const maxPages = 50;
