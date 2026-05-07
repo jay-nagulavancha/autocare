@@ -1,5 +1,7 @@
 package com.autocare.maintenance.payload.response;
 
+
+import java.util.ArrayList;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -21,8 +23,8 @@ public class ErrorResponse {
     public String getError() { return error; }
     public String getMessage() { return message; }
     public LocalDateTime getTimestamp() { return timestamp; }
-    public List<FieldError> getErrors() { return errors; }
-    public void setErrors(List<FieldError> errors) { this.errors = errors; }
+    public List<FieldError> getErrors() { return errors == null ? null : new ArrayList<>(errors); }
+    public void setErrors(List<FieldError> errors) { this.errors = errors == null ? null : new ArrayList<>(errors); }
 
     public static class FieldError {
         private String field;
