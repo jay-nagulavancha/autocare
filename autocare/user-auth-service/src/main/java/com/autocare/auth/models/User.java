@@ -60,6 +60,6 @@ public class User {
     public String getPassword() { return password; }
     public void setPassword(String password) { this.password = password; }
 
-    public Set<Role> getRoles() { return roles; }
-    public void setRoles(Set<Role> roles) { this.roles = roles; }
+    public Set<Role> getRoles() { return new HashSet<>(roles); }
+    public void setRoles(Set<Role> roles) { this.roles = (roles != null) ? new HashSet<>(roles) : new HashSet<>(); }
 }
