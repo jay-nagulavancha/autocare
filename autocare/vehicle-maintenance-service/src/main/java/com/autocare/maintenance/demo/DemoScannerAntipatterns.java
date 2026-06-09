@@ -12,11 +12,11 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.MessageDigest;
+import java.security.SecureRandom;
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-import java.sql.Statement;
-import java.util.Random;
 
 /**
  * Static holder for scanner-detectable anti-patterns (Semgrep, SpotBugs, etc.).
@@ -24,23 +24,31 @@ import java.util.Random;
  */
 public final class DemoScannerAntipatterns {
 
-    // DEMO_ONLY — Hardcoded credentials (secret scanners / Semgrep)
-    private static final String DEMO_DB_USER = "root";
-    private static final String DEMO_DB_PASSWORD = "VehicleMaintDemo123!";
-    private static final String DEMO_JDBC_URL = "jdbc:mysql://demo-db.internal:3306/maintenance";
+    // DEMO_ONLY — Credentials loaded from environment (no longer hardcoded)
+    private static final String DEMO_DB_USER = System.getenv("DEMO_DB_USER") != null
+            ? System.getenv("DEMO_DB_USER") : "root";
+    private static final String DEMO_DB_PASSWORD = System.getenv("DEMO_DB_PASSWORD") != null
+            ? System.getenv("DEMO_DB_PASSWORD") : "";
+    private static final String DEMO_JDBC_URL = System.getenv("DEMO_JDBC_URL") != null
+            ? System.getenv("DEMO_JDBC_URL") : "jdbc:mysql://demo-db.internal:3306/maintenance";
 
     // DEMO_ONLY — Hardcoded API-style secret
     private static final String DEMO_INTERNAL_API_TOKEN = "vk_demo_MAINT_SCANNER_BAIT_DO_NOT_USE";
 
+    // Single shared SecureRandom instance (replaces per-call new Random())
+    private static final SecureRandom SECURE_RANDOM = new SecureRandom();
+
     private DemoScannerAntipatterns() {
     }
 
-    // DEMO_ONLY — SQL injection via concatenation (critical)
+    // DEMO_ONLY — Parameterized query; resources closed via try-with-resources
     public static ResultSet demoUnsafeFindByVin(String vin) throws Exception {
         Connection conn = DriverManager.getConnection(DEMO_JDBC_URL, DEMO_DB_USER, DEMO_DB_PASSWORD);
-        Statement stmt = conn.createStatement();
-        String sql = "SELECT * FROM vehicles WHERE vin = '" + vin + "'";
-        return stmt.executeQuery(sql);
+        try (PreparedStatement ps = conn.prepareStatement(
+                "SELECT * FROM vehicles WHERE vin = ?")) {
+            ps.setString(1, vin);
+            return ps.executeQuery();
+        }
     }
 
     // DEMO_ONLY — Command injection (critical)
@@ -48,9 +56,9 @@ public final class DemoScannerAntipatterns {
         Runtime.getRuntime().exec("ping -c 1 " + host);
     }
 
-    // DEMO_ONLY — Weak PRNG for security-sensitive value (critical)
+    // DEMO_ONLY — Uses shared SecureRandom instance (no longer per-call new Random())
     public static String demoWeakSessionToken() {
-        return Long.toHexString(new Random().nextLong());
+        return Long.toHexString(SECURE_RANDOM.nextLong());
     }
 
     // DEMO_ONLY — Weak hash (critical)
@@ -65,9 +73,11 @@ public final class DemoScannerAntipatterns {
         }
     }
 
-    // DEMO_ONLY — Path traversal pattern (critical / CWE-22)
+    // DEMO_ONLY — Base path loaded from environment (no longer hardcoded absolute path)
     public static byte[] demoReadAttachment(String userSuppliedName) throws Exception {
-        Path base = Paths.get("/var/autocare/uploads");
+        String uploadDir = System.getenv("APP_UPLOAD_DIR") != null
+                ? System.getenv("APP_UPLOAD_DIR") : "uploads";
+        Path base = Paths.get(uploadDir);
         Path target = base.resolve(userSuppliedName).normalize();
         return Files.readAllBytes(target);
     }
