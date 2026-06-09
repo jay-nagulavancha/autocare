@@ -2,6 +2,7 @@ package com.autocare.auth.payload.response;
 
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class JwtResponse {
@@ -18,7 +19,7 @@ public class JwtResponse {
         this.id = id;
         this.username = username;
         this.email = email;
-        this.roles = roles;
+        this.roles = roles == null ? Collections.emptyList() : Collections.unmodifiableList(new ArrayList<>(roles));
     }
 
     public String getAccessToken() { return token; }

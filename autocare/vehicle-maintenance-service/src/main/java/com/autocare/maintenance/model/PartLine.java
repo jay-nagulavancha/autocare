@@ -30,7 +30,10 @@ public class PartLine {
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
+    // WorkOrder is a JPA-managed entity; defensive copying would break JPA identity.
+    @SuppressWarnings("EI_EXPOSE_REP")
     public WorkOrder getWorkOrder() { return workOrder; }
+    @SuppressWarnings("EI_EXPOSE_REP2")
     public void setWorkOrder(WorkOrder workOrder) { this.workOrder = workOrder; }
     public String getPartName() { return partName; }
     public void setPartName(String partName) { this.partName = partName; }

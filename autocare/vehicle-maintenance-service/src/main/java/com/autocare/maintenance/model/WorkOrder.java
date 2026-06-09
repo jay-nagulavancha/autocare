@@ -3,6 +3,7 @@ package com.autocare.maintenance.model;
 import javax.persistence.*;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -64,10 +65,10 @@ public class WorkOrder {
     public void setDescription(String description) { this.description = description; }
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
-    public Set<PartLine> getPartLines() { return partLines; }
-    public void setPartLines(Set<PartLine> partLines) { this.partLines = partLines; }
-    public Set<LaborLine> getLaborLines() { return laborLines; }
-    public void setLaborLines(Set<LaborLine> laborLines) { this.laborLines = laborLines; }
+    public Set<PartLine> getPartLines() { return Collections.unmodifiableSet(partLines); }
+    public void setPartLines(Set<PartLine> partLines) { this.partLines = new LinkedHashSet<>(partLines); }
+    public Set<LaborLine> getLaborLines() { return Collections.unmodifiableSet(laborLines); }
+    public void setLaborLines(Set<LaborLine> laborLines) { this.laborLines = new LinkedHashSet<>(laborLines); }
     public Set<WorkOrderStatusHistory> getStatusHistory() { return statusHistory; }
     public void setStatusHistory(Set<WorkOrderStatusHistory> statusHistory) { this.statusHistory = statusHistory; }
 }
