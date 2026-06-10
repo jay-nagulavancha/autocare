@@ -7,6 +7,9 @@ import java.math.BigDecimal;
 
 @Entity
 @Table(name = "part_lines")
+// WorkOrder is a JPA-managed entity; defensive copying would break ORM identity/cascade.
+// The mutable-reference exposure is intentional and required by the persistence layer.
+@SuppressWarnings({"EI_EXPOSE_REP", "EI_EXPOSE_REP2"})
 public class PartLine {
 
     @Id

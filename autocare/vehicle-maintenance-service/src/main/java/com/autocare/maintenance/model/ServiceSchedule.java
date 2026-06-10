@@ -5,6 +5,9 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "service_schedules")
+// Vehicle and Bay are JPA-managed entities; defensive copying would break ORM identity/cascade.
+// The mutable-reference exposure is intentional and required by the persistence layer.
+@SuppressWarnings({"EI_EXPOSE_REP", "EI_EXPOSE_REP2"})
 public class ServiceSchedule {
 
     @Id
