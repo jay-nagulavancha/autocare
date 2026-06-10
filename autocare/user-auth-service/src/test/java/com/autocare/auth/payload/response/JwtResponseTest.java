@@ -1,0 +1,169 @@
+package com.autocare.auth.payload.response;
+
+import org.junit.jupiter.api.Test;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+public class JwtResponseTest {
+
+    @Test
+    public void testConstructorWithValidRoles() {
+        List<String> roles = Arrays.asList("ROLE_USER", "ROLE_ADMIN");
+        JwtResponse response = new JwtResponse("token123", 1L, "testuser", "test@example.com", roles);
+
+        assertEquals("token123", response.getAccessToken());
+        assertEquals(1L, response.getId());
+        assertEquals("testuser", response.getUsername());
+        assertEquals("test@example.com", response.getEmail());
+        assertEquals("Bearer", response.getTokenType());
+        assertNotNull(response.getRoles());
+        assertEquals(2, response.getRoles().size());
+        assertTrue(response.getRoles().contains("ROLE_USER"));
+        assertTrue(response.getRoles().contains("ROLE_ADMIN"));
+    }
+
+    @Test
+    public void testConstructorWithNullRoles() {
+        JwtResponse response = new JwtResponse("token123", 1L, "testuser", "test@example.com", null);
+
+        assertNotNull(response.getRoles());
+        assertTrue(response.getRoles().isEmpty());
+    }
+
+    @Test
+    public void testRolesDefensiveCopyOnConstruction() {
+        List<String> originalRoles = new ArrayList<>(Arrays.asList("ROLE_USER"));
+        JwtResponse response = new JwtResponse("token123", 1L, "testuser", "test@example.com", originalRoles);
+
+        // Mutate the original list after construction
+        originalRoles.add("ROLE_ADMIN");
+
+        // The internal list should not be affected
+        assertEquals(1, response.getRoles().size());
+        assertFalse(response.getRoles().contains("ROLE_ADMIN"));
+    }
+
+    @Test
+    public void testGetRolesReturnsDefensiveCopy() {
+        List<String> roles = new ArrayList<>(Arrays.asList("ROLE_USER"));
+        JwtResponse response = new JwtResponse("token123", 1L, "testuser", "test@example.com", roles);
+
+        // Mutate the returned list
+        List<String> returnedRoles = response.getRoles();
+        returnedRoles.add("ROLE_ADMIN");
+
+        // The internal list should not be affected
+        assertEquals(1, response.getRoles().size());
+        assertFalse(response.getRoles().contains("ROLE_ADMIN"));
+    }
+
+    @Test
+    public void testGetRolesReturnsDifferentInstance() {
+        List<String> roles = Arrays.asList("ROLE_USER");
+        JwtResponse response = new JwtResponse("token123", 1L, "testuser", "test@example.com", roles);
+
+        List<String> firstCall = response.getRoles();
+        List<String> secondCall = response.getRoles();
+
+        assertNotSame(firstCall, secondCall);
+        assertEquals(firstCall, secondCall);
+    }
+
+    @Test
+    public void testSetAccessToken() {
+        JwtResponse response = new JwtResponse("token123", 1L, "testuser", "test@example.com", null);
+        response.setAccessToken("newToken456");
+        assertEquals("newToken456", response.getAccessToken());
+    }
+
+    @Test
+    public void testSetTokenType() {
+        JwtResponse response = new JwtResponse("token123", 1L, "testuser", "test@example.com", null);
+        response.setTokenType("Basic");
+        assertEquals("Basic", response.getTokenType());
+    }
+
+    @Test
+    public void testSetId() {
+        JwtResponse response = new JwtResponse("token123", 1L, "testuser", "test@example.com", null);
+        response.setId(99L);
+        assertEquals(99L, response.getId());
+    }
+
+    @Test
+    public void testSetEmail() {
+        JwtResponse response = new JwtResponse("token123", 1L, "testuser", "test@example.com", null);
+        response.setEmail("newemail@example.com");
+        assertEquals("newemail@example.com", response.getEmail());
+    }
+
+    @Test
+    public void testSetUsername() {
+        JwtResponse response = new JwtResponse("token123", 1L, "testuser", "test@example.com", null);
+        response.setUsername("newuser");
+        assertEquals("newuser", response.getUsername());
+    }
+
+    @Test
+    public void testDefaultTokenType() {
+        JwtResponse response = new JwtResponse("token123", 1L, "testuser", "test@example.com", null);
+        assertEquals("Bearer", response.getTokenType());
+    }
+
+    @Test
+    public void testConstructorWithEmptyRoles() {
+        List<String> emptyRoles = new ArrayList<>();
+        JwtResponse response = new JwtResponse("token123", 1L, "testuser", "test@example.com", emptyRoles);
+
+        assertNotNull(response.getRoles());
+        assertTrue(response.getRoles().isEmpty());
+    }
+
+    @Test
+    public void testConstructorWithNullToken() {
+        JwtResponse response = new JwtResponse(null, 1L, "testuser", "test@example.com", null);
+        assertNull(response.getAccessToken());
+    }
+
+    @Test
+    public void testConstructorWithNullId() {
+        JwtResponse response = new JwtResponse("token123", null, "testuser", "test@example.com", null);
+        assertNull(response.getId());
+    }
+
+    @Test
+    public void testConstructorWithNullUsername() {
+        JwtResponse response = new JwtResponse("token123", 1L, null, "test@example.com", null);
+        assertNull(response.getUsername());
+    }
+
+    @Test
+    public void testConstructorWithNullEmail() {
+        JwtResponse response = new JwtResponse("token123", 1L, "testuser", null, null);
+        assertNull(response.getEmail());
+    }
+
+    @Test
+    public void testRolesListIsNotSameAsInput() {
+        List<String> roles = new ArrayList<>(Arrays.asList("ROLE_USER"));
+        JwtResponse response = new JwtResponse("token123", 1L, "testuser", "test@example.com", roles);
+
+        assertNotSame(roles, response.getRoles());
+    }
+
+    @Test
+    public void testMultipleRolesPreserved() {
+        List<String> roles = Arrays.asList("ROLE_USER", "ROLE_ADMIN", "ROLE_MODERATOR");
+        JwtResponse response = new JwtResponse("token123", 1L, "testuser", "test@example.com", roles);
+
+        List<String> returnedRoles = response.getRoles();
+        assertEquals(3, returnedRoles.size());
+        assertTrue(returnedRoles.contains("ROLE_USER"));
+        assertTrue(returnedRoles.contains("ROLE_ADMIN"));
+        assertTrue(returnedRoles.contains("ROLE_MODERATOR"));
+    }
+}

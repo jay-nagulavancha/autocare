@@ -30,7 +30,11 @@ public class PartLine {
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
+    // EI_EXPOSE_REP/EI_EXPOSE_REP2: WorkOrder is a JPA-managed entity reference;
+    // defensive copying would break proxy identity, lazy-loading, and dirty-tracking.
+    @SuppressWarnings({"EI_EXPOSE_REP", "EI_EXPOSE_REP2"})
     public WorkOrder getWorkOrder() { return workOrder; }
+    @SuppressWarnings({"EI_EXPOSE_REP", "EI_EXPOSE_REP2"})
     public void setWorkOrder(WorkOrder workOrder) { this.workOrder = workOrder; }
     public String getPartName() { return partName; }
     public void setPartName(String partName) { this.partName = partName; }
