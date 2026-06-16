@@ -30,9 +30,13 @@ public class ServiceSchedule {
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
+    @SuppressWarnings("EI_EXPOSE_REP")
     public Vehicle getVehicle() { return vehicle; }
+    @SuppressWarnings("EI_EXPOSE_REP2")
     public void setVehicle(Vehicle vehicle) { this.vehicle = vehicle; }
+    @SuppressWarnings("EI_EXPOSE_REP")
     public Bay getBay() { return bay; }
+    @SuppressWarnings("EI_EXPOSE_REP2")
     public void setBay(Bay bay) { this.bay = bay; }
     public LocalDateTime getScheduledAt() { return scheduledAt; }
     public void setScheduledAt(LocalDateTime scheduledAt) { this.scheduledAt = scheduledAt; }

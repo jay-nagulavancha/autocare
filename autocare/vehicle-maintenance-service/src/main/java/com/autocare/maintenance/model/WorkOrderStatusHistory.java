@@ -36,7 +36,10 @@ public class WorkOrderStatusHistory {
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
     public WorkOrder getWorkOrder() { return workOrder; }
-    public void setWorkOrder(WorkOrder workOrder) { this.workOrder = workOrder; }
+    public void setWorkOrder(WorkOrder workOrder) {
+        if (workOrder == null) throw new IllegalArgumentException("workOrder must not be null");
+        this.workOrder = workOrder;
+    }
     public WorkOrderStatus getPreviousStatus() { return previousStatus; }
     public void setPreviousStatus(WorkOrderStatus previousStatus) { this.previousStatus = previousStatus; }
     public WorkOrderStatus getNewStatus() { return newStatus; }
