@@ -102,17 +102,17 @@
             <scope>test</scope>
         </dependency>
 
-        <!-- DEMO_ONLY: vulnerable commons-text for OSS scanner (CVE-2022-42889 Text4Shell). Not imported by app code. Remove after demo. -->
+        <!-- commons-text: bumped from 1.9 to 1.10.0 to fix CVE-2022-42889 (GHSA-599f-7c49-w659, Text4Shell) -->
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-text</artifactId>
-            <version>1.9</version>
+            <version>1.10.0</version>
         </dependency>
-        <!-- DEMO_ONLY: log4j-core 2.14.1 → CVE-2021-44228 (Log4Shell, CVSS ~10 → critical in platform OSS mapping). Not used by logging stack at runtime if logback wins; still scanned. Remove after demo. -->
+        <!-- log4j-core: bumped from 2.14.1 to 2.17.2 to fix CVE-2021-44228/45046/45105 (GHSA-jfh8-c2jp-5v3q, GHSA-7rjr-3q55-vv33, GHSA-p6xc-xr62-6r2g) -->
         <dependency>
             <groupId>org.apache.logging.log4j</groupId>
             <artifactId>log4j-core</artifactId>
-            <version>2.14.1</version>
+            <version>2.17.2</version>
         </dependency>
     </dependencies>
 
