@@ -14,8 +14,11 @@ resource "aws_acm_certificate" "this" {
     create_before_destroy = true
   }
 
-  tags = {
+      Project     = "otasdp"
+tags = {
     Name = var.domain_name
+    Environment = var.environment
+    Owner       = "Jayavardhan.Nagulavancha@ttsystems.com"
   }
 }
 

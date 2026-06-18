@@ -13,7 +13,10 @@ resource "aws_iam_role" "autocare_irsa" {
   name               = "${var.cluster_name}-autocare-irsa"
   assume_role_policy = data.aws_iam_policy_document.autocare_irsa_trust.json
 
-  tags = {
+      Project     = "otasdp"
+tags = {
+    Environment = var.environment
+    Owner       = "Jayavardhan.Nagulavancha@ttsystems.com"
     Name        = "${var.cluster_name}-autocare-irsa"
     Environment = "production"
     ManagedBy   = "terraform"
@@ -53,7 +56,10 @@ resource "aws_iam_policy" "autocare_secrets_access" {
   description = "Allows autocare service account to read Autocare secrets from Secrets Manager"
   policy      = data.aws_iam_policy_document.autocare_secrets_access.json
 
-  tags = {
+      Project     = "otasdp"
+tags = {
+    Environment = var.environment
+    Owner       = "Jayavardhan.Nagulavancha@ttsystems.com"
     Name        = "${var.cluster_name}-autocare-secrets-access"
     Environment = "production"
     ManagedBy   = "terraform"
@@ -116,7 +122,10 @@ resource "aws_iam_role" "cicd" {
   name               = "${var.cluster_name}-cicd-pipeline"
   assume_role_policy = data.aws_iam_policy_document.cicd_trust.json
 
-  tags = {
+      Project     = "otasdp"
+tags = {
+    Environment = var.environment
+    Owner       = "Jayavardhan.Nagulavancha@ttsystems.com"
     Name        = "${var.cluster_name}-cicd-pipeline"
     Environment = "production"
     ManagedBy   = "terraform"
@@ -178,7 +187,10 @@ resource "aws_iam_policy" "cicd_permissions" {
   description = "Least-privilege permissions for the GitHub Actions CI/CD pipeline"
   policy      = data.aws_iam_policy_document.cicd_permissions.json
 
-  tags = {
+      Project     = "otasdp"
+tags = {
+    Environment = var.environment
+    Owner       = "Jayavardhan.Nagulavancha@ttsystems.com"
     Name        = "${var.cluster_name}-cicd-permissions"
     Environment = "production"
     ManagedBy   = "terraform"
@@ -225,7 +237,10 @@ resource "aws_iam_role" "lbc" {
   name               = "${var.cluster_name}-aws-lbc-controller"
   assume_role_policy = data.aws_iam_policy_document.lbc_trust.json
 
-  tags = {
+      Project     = "otasdp"
+tags = {
+    Environment = var.environment
+    Owner       = "Jayavardhan.Nagulavancha@ttsystems.com"
     Name        = "${var.cluster_name}-aws-lbc-controller"
     Environment = "production"
     ManagedBy   = "terraform"
@@ -237,7 +252,10 @@ resource "aws_iam_policy" "lbc" {
   description = "AWS Load Balancer Controller — see lbc_iam_policy.json"
   policy      = file("${path.module}/lbc_iam_policy.json")
 
-  tags = {
+      Project     = "otasdp"
+tags = {
+    Environment = var.environment
+    Owner       = "Jayavardhan.Nagulavancha@ttsystems.com"
     Name        = "${var.cluster_name}-aws-lbc"
     Environment = "production"
     ManagedBy   = "terraform"

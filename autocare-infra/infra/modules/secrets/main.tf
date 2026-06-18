@@ -7,10 +7,12 @@ resource "aws_secretsmanager_secret" "jwt_secret" {
   description             = "JWT signing secret for Autocare services"
   recovery_window_in_days = 7
 
-  tags = {
+      Project     = "otasdp"
+tags = {
     Name        = "autocare-jwt-secret"
     Environment = "production"
     ManagedBy   = "terraform"
+    Owner       = "Jayavardhan.Nagulavancha@ttsystems.com"
   }
 }
 
@@ -25,10 +27,12 @@ resource "aws_secretsmanager_secret" "db_password" {
   description             = "MySQL root password for Autocare RDS instance"
   recovery_window_in_days = 7
 
-  tags = {
+      Project     = "otasdp"
+tags = {
     Name        = "autocare-db-password"
     Environment = "production"
     ManagedBy   = "terraform"
+    Owner       = "Jayavardhan.Nagulavancha@ttsystems.com"
   }
 }
 
@@ -43,10 +47,12 @@ resource "aws_secretsmanager_secret" "rds_endpoint" {
   description             = "RDS MySQL endpoint hostname for Autocare services"
   recovery_window_in_days = 7
 
-  tags = {
+      Project     = "otasdp"
+tags = {
     Name        = "autocare-rds-endpoint"
     Environment = "production"
     ManagedBy   = "terraform"
+    Owner       = "Jayavardhan.Nagulavancha@ttsystems.com"
   }
 }
 

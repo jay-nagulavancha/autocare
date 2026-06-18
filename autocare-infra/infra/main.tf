@@ -30,9 +30,10 @@ provider "aws" {
 
   default_tags {
     tags = {
-      Project     = "autocare"
+      Project     = "otasdp"
       ManagedBy   = "terraform"
       Environment = var.environment
+      Owner       = "Jayavardhan.Nagulavancha@ttsystems.com"
     }
   }
 }

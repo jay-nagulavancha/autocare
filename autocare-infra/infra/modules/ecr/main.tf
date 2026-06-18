@@ -37,6 +37,8 @@ resource "aws_ecr_repository" "this" {
 
   tags = {
     Project = "autocare"
+    Environment = var.environment
+    Owner       = "Jayavardhan.Nagulavancha@ttsystems.com"
   }
 }
 

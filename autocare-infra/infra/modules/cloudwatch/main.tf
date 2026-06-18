@@ -12,7 +12,10 @@ resource "aws_cloudwatch_log_group" "autocare" {
   name              = "/autocare/${each.key}"
   retention_in_days = 30
 
-  tags = {
+      Project     = "otasdp"
+tags = {
     Service = each.key
+    Environment = var.environment
+    Owner       = "Jayavardhan.Nagulavancha@ttsystems.com"
   }
 }

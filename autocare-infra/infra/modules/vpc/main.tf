@@ -6,7 +6,10 @@ resource "aws_vpc" "this" {
   enable_dns_hostnames = true
   enable_dns_support   = true
 
-  tags = {
+      Project     = "otasdp"
+tags = {
+    Environment = var.environment
+    Owner       = "Jayavardhan.Nagulavancha@ttsystems.com"
     Name = "${var.cluster_name}-vpc"
   }
 }
@@ -18,7 +21,10 @@ resource "aws_subnet" "public_a" {
   availability_zone       = "${var.region}a"
   map_public_ip_on_launch = true
 
-  tags = {
+      Project     = "otasdp"
+tags = {
+    Environment = var.environment
+    Owner       = "Jayavardhan.Nagulavancha@ttsystems.com"
     Name                                        = "${var.cluster_name}-public-a"
     "kubernetes.io/role/elb"                    = "1"
     "kubernetes.io/cluster/${var.cluster_name}" = "shared"
@@ -31,7 +37,10 @@ resource "aws_subnet" "public_b" {
   availability_zone       = "${var.region}b"
   map_public_ip_on_launch = true
 
-  tags = {
+      Project     = "otasdp"
+tags = {
+    Environment = var.environment
+    Owner       = "Jayavardhan.Nagulavancha@ttsystems.com"
     Name                                        = "${var.cluster_name}-public-b"
     "kubernetes.io/role/elb"                    = "1"
     "kubernetes.io/cluster/${var.cluster_name}" = "shared"
@@ -44,7 +53,10 @@ resource "aws_subnet" "private_a" {
   cidr_block        = "10.0.3.0/24"
   availability_zone = "${var.region}a"
 
-  tags = {
+      Project     = "otasdp"
+tags = {
+    Environment = var.environment
+    Owner       = "Jayavardhan.Nagulavancha@ttsystems.com"
     Name                                        = "${var.cluster_name}-private-a"
     "kubernetes.io/role/internal-elb"           = "1"
     "kubernetes.io/cluster/${var.cluster_name}" = "shared"
@@ -56,7 +68,10 @@ resource "aws_subnet" "private_b" {
   cidr_block        = "10.0.4.0/24"
   availability_zone = "${var.region}b"
 
-  tags = {
+      Project     = "otasdp"
+tags = {
+    Environment = var.environment
+    Owner       = "Jayavardhan.Nagulavancha@ttsystems.com"
     Name                                        = "${var.cluster_name}-private-b"
     "kubernetes.io/role/internal-elb"           = "1"
     "kubernetes.io/cluster/${var.cluster_name}" = "shared"
@@ -67,7 +82,10 @@ resource "aws_subnet" "private_b" {
 resource "aws_internet_gateway" "this" {
   vpc_id = aws_vpc.this.id
 
-  tags = {
+      Project     = "otasdp"
+tags = {
+    Environment = var.environment
+    Owner       = "Jayavardhan.Nagulavancha@ttsystems.com"
     Name = "${var.cluster_name}-igw"
   }
 }
@@ -76,7 +94,10 @@ resource "aws_internet_gateway" "this" {
 resource "aws_eip" "nat" {
   domain = "vpc"
 
-  tags = {
+      Project     = "otasdp"
+tags = {
+    Environment = var.environment
+    Owner       = "Jayavardhan.Nagulavancha@ttsystems.com"
     Name = "${var.cluster_name}-nat-eip"
   }
 }
@@ -85,7 +106,10 @@ resource "aws_nat_gateway" "this" {
   allocation_id = aws_eip.nat.id
   subnet_id     = aws_subnet.public_a.id
 
-  tags = {
+      Project     = "otasdp"
+tags = {
+    Environment = var.environment
+    Owner       = "Jayavardhan.Nagulavancha@ttsystems.com"
     Name = "${var.cluster_name}-nat"
   }
 
@@ -101,7 +125,10 @@ resource "aws_route_table" "public" {
     gateway_id = aws_internet_gateway.this.id
   }
 
-  tags = {
+      Project     = "otasdp"
+tags = {
+    Environment = var.environment
+    Owner       = "Jayavardhan.Nagulavancha@ttsystems.com"
     Name = "${var.cluster_name}-public-rt"
   }
 }
@@ -125,7 +152,10 @@ resource "aws_route_table" "private" {
     nat_gateway_id = aws_nat_gateway.this.id
   }
 
-  tags = {
+      Project     = "otasdp"
+tags = {
+    Environment = var.environment
+    Owner       = "Jayavardhan.Nagulavancha@ttsystems.com"
     Name = "${var.cluster_name}-private-rt"
   }
 }

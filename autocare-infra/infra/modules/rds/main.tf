@@ -9,7 +9,10 @@ resource "aws_db_subnet_group" "this" {
   description = "Private subnet group for ${var.cluster_name} RDS instance"
   subnet_ids  = var.private_subnet_ids
 
-  tags = {
+      Project     = "otasdp"
+tags = {
+    Environment = var.environment
+    Owner       = "Jayavardhan.Nagulavancha@ttsystems.com"
     Name = "${var.cluster_name}-rds-subnet-group"
   }
 }
@@ -38,7 +41,10 @@ resource "aws_security_group" "rds" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  tags = {
+      Project     = "otasdp"
+tags = {
+    Environment = var.environment
+    Owner       = "Jayavardhan.Nagulavancha@ttsystems.com"
     Name = "${var.cluster_name}-rds-sg"
   }
 }
@@ -72,7 +78,10 @@ resource "aws_db_instance" "this" {
 
   publicly_accessible = false
 
-  tags = {
+      Project     = "otasdp"
+tags = {
+    Environment = var.environment
+    Owner       = "Jayavardhan.Nagulavancha@ttsystems.com"
     Name = "${var.cluster_name}-mysql"
   }
 }
