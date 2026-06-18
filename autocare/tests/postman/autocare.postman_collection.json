@@ -25,7 +25,7 @@
           "listen": "prerequest",
           "script": {
             "exec": [
-              "const runId = Date.now().toString().slice(-8) + '_' + Math.floor(Math.random() * 1000).toString().padStart(3, '0');",
+              "const runId = Date.now().toString().slice(-8);",
               "const adminUsername = `admin_${runId}`;",
               "pm.environment.set('RUN_ID', runId);",
               "pm.environment.set('ADMIN_USERNAME', adminUsername);",

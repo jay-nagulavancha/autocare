@@ -15,7 +15,7 @@ terraform {
   # Remote state (backend block cannot use variables — region must match the bucket's region).
   backend "s3" {
     bucket  = "autocare-terraform-state-123456789"
-    key     = "autocare-terraform-state-123456789.state"
+    key     = "${var.environment}/autocare-infra/terraform.tfstate"
     region  = "us-west-2"
     encrypt = true
     # Optional: uncomment if you created a DynamoDB table for state locking

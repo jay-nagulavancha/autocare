@@ -7,6 +7,7 @@ COPY src ./src
 RUN ./mvnw clean package -DskipTests -B
 
 FROM eclipse-temurin:17-jre-alpine
+# Minor non-functional change to trigger CI build.
 ARG AUTOCARE_GIT_COMMIT=docker
 ARG AUTOCARE_BUILD_TIME=unknown
 ENV AUTOCARE_GIT_COMMIT=$AUTOCARE_GIT_COMMIT \
