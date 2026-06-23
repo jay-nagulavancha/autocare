@@ -3,7 +3,9 @@ package com.autocare.maintenance.security.services;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 public class JwtUserDetails implements UserDetails {
@@ -13,12 +15,12 @@ public class JwtUserDetails implements UserDetails {
 
     public JwtUserDetails(String username, List<GrantedAuthority> authorities) {
         this.username = username;
-        this.authorities = authorities;
+        this.authorities = new ArrayList<>(authorities);
     }
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return authorities;
+        return Collections.unmodifiableList(authorities);
     }
 
     @Override
