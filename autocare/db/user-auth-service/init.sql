@@ -4,7 +4,8 @@ USE auth_db;
 CREATE TABLE IF NOT EXISTS roles (
   id   INT          NOT NULL AUTO_INCREMENT,
   name VARCHAR(20)  NOT NULL,
-  PRIMARY KEY (id)
+  PRIMARY KEY (id),
+  UNIQUE KEY uk_role_name (name)
 );
 
 CREATE TABLE IF NOT EXISTS users (
