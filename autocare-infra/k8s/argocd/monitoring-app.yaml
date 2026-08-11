@@ -42,12 +42,15 @@ spec:
                   region: us-west-2
             storageSpec: {}
             resources:
+              # 256Mi limit OOMKilled Prometheus (exit 137) — cluster-wide scraping
+              # (apiserver, kubelet, etcd, kube-state-metrics, 5x node-exporter) plus
+              # the remote-write WAL buffer needs more headroom even in agent mode.
               requests:
                 cpu: 50m
-                memory: 128Mi
-              limits:
-                cpu: 200m
                 memory: 256Mi
+              limits:
+                cpu: 300m
+                memory: 512Mi
 
         # No AlertManager — not requested, saves a pod on an already-tight t3.small budget.
         alertmanager:
