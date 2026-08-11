@@ -62,6 +62,13 @@ spec:
               eks.amazonaws.com/role-arn: arn:aws:iam::626635446574:role/jn-eks-amp-query
           persistence:
             enabled: false
+          sidecar:
+            datasources:
+              # The chart's own auto-provisioned "Prometheus" datasource (pointing at the
+              # local agent-mode Prometheus, which has no query API) is also isDefault:true
+              # by default — conflicts with the AMP datasource below ("only one default
+              # datasource per org"). Disable it; AMP is the only queryable datasource.
+              defaultDatasourceEnabled: false
           resources:
             requests:
               cpu: 50m
@@ -91,5 +98,9 @@ spec:
       prune: true
     syncOptions:
       - CreateNamespace=true
+      # prometheus-operator's CRDs (Prometheus, Alertmanager, etc.) exceed the 262144-byte
+      # client-side-apply annotation limit — same class of issue as ArgoCD's own
+      # ApplicationSet CRD during initial bootstrap. Server-side apply avoids it.
+      - ServerSideApply=true
 
   revisionHistoryLimit: 6
