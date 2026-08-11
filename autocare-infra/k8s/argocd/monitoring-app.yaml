@@ -15,6 +15,15 @@ spec:
     helm:
       releaseName: monitoring
       values: |
+        # prometheus-operator's CRDs (Prometheus, Alertmanager, etc.) exceed the
+        # 262144-byte metadata.annotations cap when ArgoCD applies them — happens with
+        # or without ServerSideApply=true (ArgoCD keeps retrying its own reconcile of
+        # them and hitting the same limit). Installed directly via a one-time
+        # `kubectl apply --server-side` instead; disable the chart's own CRD management
+        # so ArgoCD doesn't fight over them.
+        crds:
+          enabled: false
+
         # Prometheus runs in Agent mode — scrapes and remote-writes to AMP only,
         # no local TSDB/query, so no PersistentVolume (and no EBS CSI driver) is needed.
         prometheus:
