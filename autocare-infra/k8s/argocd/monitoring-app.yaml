@@ -63,6 +63,13 @@ spec:
               memory: 256Mi
 
         grafana:
+          grafana.ini:
+            auth:
+              # Grafana won't SigV4-sign requests to any datasource unless this is
+              # enabled server-wide (per-datasource sigV4Auth:true alone isn't enough) —
+              # without it Grafana sends unsigned requests, which AMP rejects with
+              # "Missing Authentication Token".
+              sigv4_auth_enabled: true
           serviceAccount:
             create: true
             name: grafana
