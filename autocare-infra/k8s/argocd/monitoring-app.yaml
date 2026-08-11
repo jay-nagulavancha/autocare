@@ -1,0 +1,95 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: monitoring
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+
+  source:
+    repoURL: https://prometheus-community.github.io/helm-charts
+    chart: kube-prometheus-stack
+    targetRevision: 88.3.0
+    helm:
+      releaseName: monitoring
+      values: |
+        # Prometheus runs in Agent mode — scrapes and remote-writes to AMP only,
+        # no local TSDB/query, so no PersistentVolume (and no EBS CSI driver) is needed.
+        prometheus:
+          serviceAccount:
+            create: true
+            name: amp-ingest
+            annotations:
+              # Must match: terraform output -raw amp_ingest_role_arn
+              eks.amazonaws.com/role-arn: arn:aws:iam::626635446574:role/jn-eks-amp-ingest
+          prometheusSpec:
+            agentMode: true
+            remoteWrite:
+              # Must match: terraform output -raw amp_remote_write_endpoint
+              - url: https://aps-workspaces.us-west-2.amazonaws.com/workspaces/ws-1e1cbec8-5175-4312-a5fe-d79116bfaac5/api/v1/remote_write
+                sigv4:
+                  region: us-west-2
+            storageSpec: {}
+            resources:
+              requests:
+                cpu: 50m
+                memory: 128Mi
+              limits:
+                cpu: 200m
+                memory: 256Mi
+
+        # No AlertManager — not requested, saves a pod on an already-tight t3.small budget.
+        alertmanager:
+          enabled: false
+
+        prometheusOperator:
+          resources:
+            requests:
+              cpu: 50m
+              memory: 128Mi
+            limits:
+              cpu: 200m
+              memory: 256Mi
+
+        grafana:
+          serviceAccount:
+            create: true
+            name: grafana
+            annotations:
+              # Must match: terraform output -raw amp_query_role_arn
+              eks.amazonaws.com/role-arn: arn:aws:iam::626635446574:role/jn-eks-amp-query
+          persistence:
+            enabled: false
+          resources:
+            requests:
+              cpu: 50m
+              memory: 128Mi
+            limits:
+              cpu: 200m
+              memory: 256Mi
+          additionalDataSources:
+            - name: AMP
+              type: prometheus
+              access: proxy
+              # Must match: terraform output -raw amp_query_endpoint
+              url: https://aps-workspaces.us-west-2.amazonaws.com/workspaces/ws-1e1cbec8-5175-4312-a5fe-d79116bfaac5/
+              isDefault: true
+              jsonData:
+                sigV4Auth: true
+                sigV4AuthType: default
+                sigV4Region: us-west-2
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: monitoring
+
+  syncPolicy:
+    automated:
+      selfHeal: true
+      prune: true
+    syncOptions:
+      - CreateNamespace=true
+
+  revisionHistoryLimit: 6

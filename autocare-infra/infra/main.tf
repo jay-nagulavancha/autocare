@@ -12,10 +12,11 @@ terraform {
     }
   }
 
-  # Remote state (backend block cannot use variables — region must match the bucket's region).
+  # Remote state. Backend blocks cannot reference variables at all (not even
+  # for the state key), so `key` is intentionally omitted here and supplied
+  # per-workspace via `terraform init -backend-config=workspaces/<name>/backend.hcl`.
   backend "s3" {
     bucket  = "autocare-terraform-state-123456789"
-    key     = "${var.environment}/autocare-infra/terraform.tfstate"
     region  = "us-west-2"
     encrypt = true
     # Optional: uncomment if you created a DynamoDB table for state locking
@@ -26,14 +27,15 @@ terraform {
 }
 
 provider "aws" {
-  region = var.aws_region
+  region  = var.aws_region
+  profile = var.aws_profile
 
   default_tags {
     tags = {
-      Project     = "otasdp"
+      Project     = var.project
       ManagedBy   = "terraform"
       Environment = var.environment
-      Owner       = "Jayavardhan.Nagulavancha@ttsystems.com"
+      Owner       = var.owner
     }
   }
 }
@@ -43,9 +45,11 @@ provider "aws" {
 # ---------------------------------------------------------------------------
 
 module "vpc" {
-  source       = "./modules/vpc"
-  region       = var.aws_region
-  cluster_name = var.cluster_name
+  source          = "./modules/vpc"
+  region          = var.aws_region
+  cluster_name    = var.cluster_name
+  vpc_id          = var.vpc_id
+  existing_igw_id = var.existing_igw_id
 }
 
 # ---------------------------------------------------------------------------
@@ -121,6 +125,19 @@ module "iam" {
   secret_arns       = module.secrets.secret_arns
   github_org        = var.github_org
   github_repo       = var.github_repo
+}
+
+# ---------------------------------------------------------------------------
+# AMP (Amazon Managed Service for Prometheus) — metrics backend for
+# Prometheus/Grafana monitoring, keeps the cluster's Prometheus agent
+# stateless (no EBS/PVC needed).
+# ---------------------------------------------------------------------------
+
+module "amp" {
+  source            = "./modules/amp"
+  cluster_name      = var.cluster_name
+  oidc_provider_arn = module.eks.oidc_provider_arn
+  oidc_provider_url = replace(data.aws_eks_cluster.this.identity[0].oidc[0].issuer, "https://", "")
 }
 
 # ---------------------------------------------------------------------------

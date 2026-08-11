@@ -18,7 +18,9 @@ spec:
     directory:
       recurse: true
       # This manifest updates the Application CR itself; excluding avoids a self-referential sync loop.
-      exclude: argocd/autocare-app.yaml
+      # monitoring-app.yaml is its own separate Application (Helm chart source, not plain manifests) —
+      # excluded so the autocare app doesn't try to manage it too.
+      exclude: "{argocd/autocare-app.yaml,argocd/monitoring-app.yaml}"
 
   destination:
     server: https://kubernetes.default.svc

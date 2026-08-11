@@ -45,3 +45,23 @@ output "vpc_id" {
   description = "VPC ID for the EKS cluster — used by AWS Load Balancer Controller Helm install"
   value       = module.vpc.vpc_id
 }
+
+output "amp_remote_write_endpoint" {
+  description = "AMP remote-write URL — set as the Prometheus agent's remoteWrite target"
+  value       = module.amp.remote_write_endpoint
+}
+
+output "amp_query_endpoint" {
+  description = "AMP query base URL — set as the Grafana AMP datasource URL"
+  value       = module.amp.query_endpoint
+}
+
+output "amp_ingest_role_arn" {
+  description = "IAM role ARN for the Prometheus agent service account (IRSA, monitoring/amp-ingest)"
+  value       = module.amp.ingest_role_arn
+}
+
+output "amp_query_role_arn" {
+  description = "IAM role ARN for the Grafana service account (IRSA, monitoring/grafana)"
+  value       = module.amp.query_role_arn
+}
