@@ -108,6 +108,9 @@ spec:
                 sigV4Auth: true
                 sigV4AuthType: default
                 sigV4Region: us-west-2
+                # Without this, Grafana signs with the wrong AWS service name and AMP
+                # rejects with "Credential should be scoped to correct service: 'aps'".
+                sigV4Service: aps
 
   destination:
     server: https://kubernetes.default.svc
