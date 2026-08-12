@@ -66,6 +66,10 @@ spec:
               memory: 256Mi
 
         grafana:
+          # Required for the "grafana-amazonprometheus-datasource" datasource type below —
+          # it's not bundled in the base image, grafana-cli installs it at pod startup.
+          plugins:
+            - grafana-amazonprometheus-datasource
           grafana.ini:
             auth:
               # Grafana won't SigV4-sign requests to any datasource unless this is
