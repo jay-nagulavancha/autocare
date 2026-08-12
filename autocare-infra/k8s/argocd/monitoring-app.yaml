@@ -99,7 +99,14 @@ spec:
               memory: 512Mi
           additionalDataSources:
             - name: AMP
-              type: prometheus
+              # The generic "prometheus" type + manual sigV4Service jsonData works for
+              # the legacy /api/datasources/proxy/... path but NOT for Grafana's actual
+              # dashboard/Explore query path (backend queryData plugin) — that one still
+              # signs with the wrong service and gets "Credential should be scoped to
+              # correct service: 'aps'". Use the dedicated AMP plugin instead, which is
+              # already bundled in the grafana/grafana image and signs correctly on both
+              # paths.
+              type: grafana-amazonprometheus-datasource
               access: proxy
               # Must match: terraform output -raw amp_query_endpoint
               url: https://aps-workspaces.us-west-2.amazonaws.com/workspaces/ws-1e1cbec8-5175-4312-a5fe-d79116bfaac5/
@@ -108,9 +115,6 @@ spec:
                 sigV4Auth: true
                 sigV4AuthType: default
                 sigV4Region: us-west-2
-                # Without this, Grafana signs with the wrong AWS service name and AMP
-                # rejects with "Credential should be scoped to correct service: 'aps'".
-                sigV4Service: aps
 
   destination:
     server: https://kubernetes.default.svc
