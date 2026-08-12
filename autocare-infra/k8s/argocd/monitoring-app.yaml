@@ -89,12 +89,14 @@ spec:
               # datasource per org"). Disable it; AMP is the only queryable datasource.
               defaultDatasourceEnabled: false
           resources:
+            # 256Mi limit OOMKilled Grafana (exit 137) under real browsing load —
+            # dashboards + live AMP queries need more than the idle footprint.
             requests:
               cpu: 50m
-              memory: 128Mi
-            limits:
-              cpu: 200m
               memory: 256Mi
+            limits:
+              cpu: 300m
+              memory: 512Mi
           additionalDataSources:
             - name: AMP
               type: prometheus
