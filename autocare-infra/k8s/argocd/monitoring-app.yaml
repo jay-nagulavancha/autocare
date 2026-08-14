@@ -24,6 +24,23 @@ spec:
         crds:
           enabled: false
 
+        # These 4 default ServiceMonitors target the EKS-managed control plane.
+        # kubeControllerManager/kubeScheduler are unreachable on EKS anyway (~2 dead
+        # "up" series each). kubeApiServer is reachable and was ~63% of all ingested
+        # AMP samples on its own (65,578 of 104,370 active series) — almost entirely
+        # high-cardinality request-latency histogram buckets nobody queries on a
+        # personal account, since AWS operates that control plane, not us.
+        # kubeEtcd's metrics were already folded into the apiserver job (EKS proxies
+        # them), so disabling it separately has no series impact — off for consistency.
+        kubeApiServer:
+          enabled: false
+        kubeControllerManager:
+          enabled: false
+        kubeEtcd:
+          enabled: false
+        kubeScheduler:
+          enabled: false
+
         # Prometheus runs in Agent mode — scrapes and remote-writes to AMP only,
         # no local TSDB/query, so no PersistentVolume (and no EBS CSI driver) is needed.
         prometheus:
