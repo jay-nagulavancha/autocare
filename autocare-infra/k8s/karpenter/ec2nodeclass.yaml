@@ -12,6 +12,12 @@ metadata:
   name: default
 spec:
   amiFamily: AL2023
+  # This chart version's CRD requires amiSelectorTerms explicitly (amiFamily
+  # alone isn't enough) — alias auto-resolves to the latest AL2023
+  # EKS-optimized AMI via SSM, matching amiFamily above and the existing node
+  # group's ami_type = AL2023_x86_64_STANDARD.
+  amiSelectorTerms:
+    - alias: al2023@latest
   # Must match: terraform output -raw karpenter_node_instance_profile_name
   instanceProfile: jn-eks-karpenter-node
   subnetSelectorTerms:
