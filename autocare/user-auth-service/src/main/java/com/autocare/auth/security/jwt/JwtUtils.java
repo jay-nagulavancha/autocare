@@ -57,7 +57,11 @@ public class JwtUtils {
     private static byte[] decodeSecretMaterial(String secret) {
         try {
             return Decoders.BASE64.decode(secret);
-        } catch (IllegalArgumentException ex) {
+        } catch (RuntimeException ex) {
+            // Decoders.BASE64 throws io.jsonwebtoken.io.DecodingException on invalid
+            // input, not IllegalArgumentException — catching only the latter meant
+            // this fallback never actually ran for a non-base64 secret (e.g. one
+            // containing '-'), and the exception surfaced as a 500 instead.
             return secret.getBytes(StandardCharsets.UTF_8);
         }
     }
