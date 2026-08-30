@@ -1,0 +1,24 @@
+# EC2NodeClass — defines *how* Karpenter-launched EC2 instances look.
+# instanceProfile (not `role`) is used here because Terraform already creates
+# an explicit instance profile (jn-eks-karpenter-node) wrapping the existing
+# node IAM role (jn-eks-node-role) — the same role the managed node group
+# uses, which already has an EKS access entry granting it system:nodes.
+# Using `role` instead would have Karpenter create/manage its own separate
+# instance profile via its own IAM permissions, duplicating what Terraform
+# already owns.
+apiVersion: karpenter.k8s.aws/v1
+kind: EC2NodeClass
+metadata:
+  name: default
+spec:
+  amiFamily: AL2023
+  # Must match: terraform output -raw karpenter_node_instance_profile_name
+  instanceProfile: jn-eks-karpenter-node
+  subnetSelectorTerms:
+    - tags:
+        karpenter.sh/discovery: jn-eks
+  securityGroupSelectorTerms:
+    - tags:
+        karpenter.sh/discovery: jn-eks
+  tags:
+    karpenter.sh/discovery: jn-eks
