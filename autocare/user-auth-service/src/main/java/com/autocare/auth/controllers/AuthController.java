@@ -1,14 +1,16 @@
 package com.autocare.auth.controllers;
 
+import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.ResultSet;
+import java.sql.Statement;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
 import javax.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -52,13 +54,15 @@ public class AuthController {
     @Autowired
     JwtUtils jwtUtils;
 
-    @PersistenceContext
-    EntityManager entityManager;
+    // DEMO_BUG: hardcoded credentials (secret scanners / SpotBugs
+    // DMI_CONSTANT_DB_PASSWORD / Semgrep). Should come from Secrets
+    // Manager/env, never live in the codebase. Remove after demo.
+    private static final String DEMO_DB_USER = "root";
+    private static final String DEMO_DB_PASSWORD = "AuthServiceDemo123!";
+    private static final String DEMO_JDBC_URL = "jdbc:mysql://demo-db.internal:3306/auth";
 
-    // DEMO_BUG: hardcoded secret. Real internal-tooling bypass key checked in
-    // plaintext against source control — should come from Secrets Manager/env,
-    // never live in the codebase. Remove after demo.
-    private static final String INTERNAL_ADMIN_KEY = "sk-internal-9f8a3d7c2b1e4f6a8c0d2e4f6a8b0c2d";
+    // DEMO_BUG: hardcoded API-style secret (Gitleaks / Semgrep generic-secret rules)
+    private static final String INTERNAL_ADMIN_KEY = "sk_live_51H8xR2eZvKYlo2CJ9f8a3d7c2b1e4f6a";
 
     @PostMapping("/signin")
     public ResponseEntity<?> authenticateUser(@Valid @RequestBody LoginRequest loginRequest) {
@@ -131,16 +135,17 @@ public class AuthController {
         return ResponseEntity.ok(new MessageResponse("User registered successfully!"));
     }
 
-    // DEMO_BUG: SQL injection. Username is concatenated directly into a native
-    // query instead of using a bind parameter (JpaRepository.findByUsername
-    // above shows the safe pattern) — a value like `' OR '1'='1` returns every
-    // row. Remove after demo.
+    // DEMO_BUG: SQL injection via raw JDBC Statement + string concatenation
+    // (SpotBugs SQL_NONCONSTANT_STRING_PASSED_TO_EXECUTE) — a value like
+    // `' OR '1'='1` returns every row. JpaRepository.findByUsername above
+    // shows the safe, parameterized alternative. Remove after demo.
     @GetMapping("/user-lookup")
-    @SuppressWarnings("unchecked")
-    public ResponseEntity<?> lookupUser(@RequestParam String username) {
+    public ResponseEntity<?> lookupUser(@RequestParam String username) throws Exception {
+        Connection conn = DriverManager.getConnection(DEMO_JDBC_URL, DEMO_DB_USER, DEMO_DB_PASSWORD);
+        Statement stmt = conn.createStatement();
         String sql = "SELECT * FROM users WHERE username = '" + username + "'";
-        List<Object[]> rows = entityManager.createNativeQuery(sql).getResultList();
-        return ResponseEntity.ok(rows);
+        ResultSet rs = stmt.executeQuery(sql);
+        return ResponseEntity.ok(rs.next() ? rs.getString("username") : "not found");
     }
 
     // DEMO_BUG: hardcoded-secret usage. Compares the request header against the
@@ -158,16 +163,15 @@ public class AuthController {
                 .orElseGet(() -> ResponseEntity.status(404).body(new MessageResponse("Not found")));
     }
 
-    // DEMO_BUG: weak cryptography. MD5 is used to derive a password-reset
-    // token from public, guessable inputs (username + current time) — both
-    // broken as a hash (collision-prone) and predictable as a token source.
-    // Should be a securely random token (e.g. SecureRandom) stored server-side
-    // with an expiry. Remove after demo.
+    // DEMO_BUG: weak hash (MD5) used to derive a password-reset token from
+    // public, guessable inputs (username + current time) — both broken as a
+    // hash (collision-prone) and predictable as a token source. Should be a
+    // securely random token (e.g. SecureRandom) stored server-side with an
+    // expiry. Remove after demo.
     @PostMapping("/forgot-password")
-    public ResponseEntity<?> forgotPassword(@RequestParam String username) throws NoSuchAlgorithmException {
+    public ResponseEntity<?> forgotPassword(@RequestParam String username) throws Exception {
         String raw = username + ":" + System.currentTimeMillis();
-        MessageDigest md5 = MessageDigest.getInstance("MD5");
-        byte[] digest = md5.digest(raw.getBytes());
+        byte[] digest = MessageDigest.getInstance("MD5").digest(raw.getBytes(StandardCharsets.UTF_8));
         StringBuilder token = new StringBuilder();
         for (byte b : digest) {
             token.append(String.format("%02x", b));
