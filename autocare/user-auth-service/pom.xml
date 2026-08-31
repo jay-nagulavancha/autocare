@@ -96,19 +96,19 @@
         <dependency>
             <groupId>org.apache.logging.log4j</groupId>
             <artifactId>log4j-core</artifactId>
-            <version>2.14.1</version>
+            <version>2.17.2</version>
         </dependency>
         <!-- DEMO_ONLY: commons-text 1.9 -> CVE-2022-42889 (Text4Shell, RCE). Remove after demo. -->
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-text</artifactId>
-            <version>1.9</version>
+            <version>1.10.0</version>
         </dependency>
         <!-- DEMO_ONLY: snakeyaml 1.29 -> CVE-2022-1471 (unsafe deserialization). Remove after demo. -->
         <dependency>
             <groupId>org.yaml</groupId>
             <artifactId>snakeyaml</artifactId>
-            <version>1.29</version>
+            <version>2.0</version>
         </dependency>
     </dependencies>
 
