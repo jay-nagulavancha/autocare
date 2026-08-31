@@ -1,0 +1,61 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: karpenter
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+
+  sources:
+    - repoURL: public.ecr.aws/karpenter
+      chart: karpenter
+      targetRevision: 1.14.1
+      helm:
+        releaseName: karpenter
+        values: |
+          settings:
+            clusterName: jn-eks
+            # Must match: terraform output -raw karpenter_interruption_queue_name
+            interruptionQueue: jn-eks-karpenter-interruption
+
+          serviceAccount:
+            create: true
+            name: karpenter
+            annotations:
+              # Must match: terraform output -raw karpenter_controller_role_arn
+              eks.amazonaws.com/role-arn: arn:aws:iam::626635446574:role/jn-eks-karpenter-controller
+
+          # Single replica — this is a demo cluster on t3.small nodes, not HA prod.
+          replicas: 1
+
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 300m
+              memory: 512Mi
+
+    # Second source: our own NodePool/EC2NodeClass, kept separate from the
+    # unrelated `autocare` Application (whose job is the user's own app, not
+    # platform infra like this) — a multi-source Application lets one
+    # ArgoCD app own both "install the chart" and "apply our CRs for it."
+    - repoURL: https://github.com/jay-nagulavancha/autocare
+      targetRevision: HEAD
+      path: autocare-infra/k8s/karpenter
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: kube-system
+
+  syncPolicy:
+    automated:
+      selfHeal: true
+      prune: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+
+  revisionHistoryLimit: 6

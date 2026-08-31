@@ -23,6 +23,11 @@ output "node_group_role_arn" {
   value       = aws_iam_role.node.arn
 }
 
+output "node_role_name" {
+  description = "Name of the IAM role attached to the managed node group — reused for Karpenter's node instance profile"
+  value       = aws_iam_role.node.name
+}
+
 output "node_group_name" {
   description = "Name of the managed node group"
   value       = aws_eks_node_group.this.node_group_name

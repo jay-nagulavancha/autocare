@@ -46,22 +46,17 @@ output "vpc_id" {
   value       = module.vpc.vpc_id
 }
 
-output "amp_remote_write_endpoint" {
-  description = "AMP remote-write URL — set as the Prometheus agent's remoteWrite target"
-  value       = module.amp.remote_write_endpoint
+output "karpenter_controller_role_arn" {
+  description = "IAM role ARN for the karpenter/karpenter service account (IRSA) — set on the Helm serviceAccount annotation"
+  value       = module.karpenter.controller_role_arn
 }
 
-output "amp_query_endpoint" {
-  description = "AMP query base URL — set as the Grafana AMP datasource URL"
-  value       = module.amp.query_endpoint
+output "karpenter_node_instance_profile_name" {
+  description = "Instance profile name for Karpenter-launched nodes — set on EC2NodeClass.spec.instanceProfile"
+  value       = module.karpenter.node_instance_profile_name
 }
 
-output "amp_ingest_role_arn" {
-  description = "IAM role ARN for the Prometheus agent service account (IRSA, monitoring/amp-ingest)"
-  value       = module.amp.ingest_role_arn
-}
-
-output "amp_query_role_arn" {
-  description = "IAM role ARN for the Grafana service account (IRSA, monitoring/grafana)"
-  value       = module.amp.query_role_arn
+output "karpenter_interruption_queue_name" {
+  description = "SQS queue name for spot interruption events — set on the Helm settings.interruptionQueue value"
+  value       = module.karpenter.interruption_queue_name
 }

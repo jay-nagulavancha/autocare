@@ -34,3 +34,9 @@ variable "node_max_size" {
   description = "Maximum worker nodes"
   type        = number
 }
+
+variable "admin_principal_arns" {
+  description = "IAM principal ARNs granted AmazonEKSClusterAdminPolicy via EKS access entries"
+  type        = list(string)
+  default     = []
+}

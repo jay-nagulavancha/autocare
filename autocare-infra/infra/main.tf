@@ -75,6 +75,35 @@ module "eks" {
   node_desired_size     = var.eks_node_desired_size
   node_min_size         = var.eks_node_min_size
   node_max_size         = var.eks_node_max_size
+  admin_principal_arns  = var.eks_admin_principal_arns
+}
+
+# ---------------------------------------------------------------------------
+# Karpenter — controller IRSA role, node instance profile, interruption queue.
+# NodePool/EC2NodeClass/controller Helm install live in k8s/argocd/karpenter-app.yaml.
+# ---------------------------------------------------------------------------
+
+module "karpenter" {
+  source = "./modules/karpenter"
+
+  cluster_name      = var.cluster_name
+  cluster_endpoint  = module.eks.cluster_endpoint
+  oidc_provider_arn = module.eks.oidc_provider_arn
+  oidc_provider_url = replace(data.aws_eks_cluster.this.identity[0].oidc[0].issuer, "https://", "")
+  node_role_name    = module.eks.node_role_name
+}
+
+# ---------------------------------------------------------------------------
+# Fargate — hosts CoreDNS + the Karpenter controller so neither depends on
+# the EC2 managed node group existing, breaking Karpenter's chicken-and-egg
+# bootstrap problem without a static EC2 floor.
+# ---------------------------------------------------------------------------
+
+module "fargate" {
+  source = "./modules/fargate"
+
+  cluster_name       = var.cluster_name
+  private_subnet_ids = module.vpc.private_subnet_ids
 }
 
 # ---------------------------------------------------------------------------
@@ -133,13 +162,6 @@ module "iam" {
 # stateless (no EBS/PVC needed).
 # ---------------------------------------------------------------------------
 
-module "amp" {
-  source            = "./modules/amp"
-  cluster_name      = var.cluster_name
-  oidc_provider_arn = module.eks.oidc_provider_arn
-  oidc_provider_url = replace(data.aws_eks_cluster.this.identity[0].oidc[0].issuer, "https://", "")
-}
-
 # ---------------------------------------------------------------------------
 # CloudWatch
 # ---------------------------------------------------------------------------
@@ -158,9 +180,8 @@ module "auto_shutdown" {
   count  = var.enable_auto_shutdown ? 1 : 0
   source = "./modules/auto-shutdown"
 
-  cluster_name    = var.cluster_name
-  node_group_name = module.eks.node_group_name
-  rds_identifier  = module.rds.rds_identifier
-  aws_region      = var.aws_region
-  idle_minutes    = var.auto_shutdown_idle_minutes
+  cluster_name   = var.cluster_name
+  rds_identifier = module.rds.rds_identifier
+  aws_region     = var.aws_region
+  idle_minutes   = var.auto_shutdown_idle_minutes
 }
