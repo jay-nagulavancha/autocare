@@ -13,7 +13,7 @@ public class JwtUserDetails implements UserDetails {
 
     public JwtUserDetails(String username, List<GrantedAuthority> authorities) {
         this.username = username;
-        this.authorities = authorities;
+        this.authorities = List.copyOf(authorities);
     }
 
     @Override

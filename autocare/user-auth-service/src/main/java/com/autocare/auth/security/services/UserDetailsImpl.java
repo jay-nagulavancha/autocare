@@ -1,6 +1,8 @@
 package com.autocare.auth.security.services;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -31,7 +33,7 @@ public class UserDetailsImpl implements UserDetails {
         this.username = username;
         this.email = email;
         this.password = password;
-        this.authorities = authorities;
+        this.authorities = authorities == null ? Collections.emptyList() : Collections.unmodifiableList(new ArrayList<>(authorities));
     }
 
     public static UserDetailsImpl build(User user) {
