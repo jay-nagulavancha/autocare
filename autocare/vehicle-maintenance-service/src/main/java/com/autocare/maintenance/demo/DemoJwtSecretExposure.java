@@ -25,10 +25,14 @@ public class DemoJwtSecretExposure {
      * DEMO_ONLY — Returns internal {@code List}; SpotBugs reports EI_EXPOSE_REP (caller can mutate JWT
      * key material).
      */
-    public List<String> getJwtSigningKeySegments() { return jwtSigningKeySegments == null ? null : new ArrayList<>(jwtSigningKeySegments); }
+    public List<String> getJwtSigningKeySegments() {
+        return jwtSigningKeySegments;
+    }
 
     /**
      * DEMO_ONLY — Same exposure pattern for password-adjacent cached hints.
      */
-    public List<String> getPasswordResetHints() { return passwordResetHints == null ? null : new ArrayList<>(passwordResetHints); }
+    public List<String> getPasswordResetHints() {
+        return passwordResetHints;
+    }
 }
